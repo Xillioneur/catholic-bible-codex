@@ -40,7 +40,7 @@ export function AppSidebar() {
   const mainItems = [
     {
       title: "Sanctuary",
-      url: "/",
+      url: "/sanctuary",
       icon: Home,
     },
     {
