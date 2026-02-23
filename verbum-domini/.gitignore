@@ -13,8 +13,14 @@
 /prisma/db.sqlite-journal
 db.sqlite
 
+# PWA
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/fallback-*.js
+
 # next.js
-/.next/
+.next/
 /out/
 next-env.d.ts
 
