@@ -109,6 +109,30 @@ export const bibleRouter = createTRPCRouter({
     return { bookmarks, notes, highlights };
   }),
 
+  getUserPreferences: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.db.userPreference.upsert({
+      where: { userId: ctx.session.user.id },
+      update: {},
+      create: { userId: ctx.session.user.id }
+    });
+  }),
+
+  updateUserPreferences: protectedProcedure
+    .input(z.object({
+      lastBook: z.string().optional(),
+      lastChapter: z.number().optional(),
+      readingSpeed: z.number().optional(),
+      fontSize: z.number().optional(),
+      theme: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.userPreference.upsert({
+        where: { userId: ctx.session.user.id },
+        update: input,
+        create: { ...input, userId: ctx.session.user.id }
+      });
+    }),
+
   // User Actions
   toggleBookmark: protectedProcedure
     .input(z.object({ verseId: z.string() }))

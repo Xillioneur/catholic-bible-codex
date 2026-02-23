@@ -1,20 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { api } from "~/trpc/react";
 import { getDailyReadings } from "~/lib/liturgy";
 import { Card, CardContent } from "~/components/ui/card";
-import { Calendar as CalendarIcon, ChevronRight } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronRight, Loader2 } from "lucide-react";
 import { useLastRead } from "~/hooks/use-last-read";
 import { useEffect, useState } from "react";
 import type { LiturgicalDay } from "~/lib/liturgy";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Skeleton } from "~/components/ui/skeleton";
-import { api } from "~/trpc/react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const lastRead = useLastRead();
+  const router = useRouter();
   const today = new Date();
   const { data: books, isLoading: booksLoading } = api.bible.getBooks.useQuery();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   const [liturgicalDay, setLiturgicalDay] = useState<LiturgicalDay>({
     date: today.toISOString(),
@@ -25,9 +28,19 @@ export default function Home() {
   });
 
   useEffect(() => {
-    // getLiturgicalDay is async
+    // 1. Load liturgical data
     import("~/lib/liturgy").then(m => m.getLiturgicalDay(today).then(setLiturgicalDay));
-  }, []);
+
+    // 2. Auto-resume logic
+    const saved = localStorage.getItem("vd_last_read");
+    if (saved) {
+      const state = JSON.parse(saved);
+      if (state.book && state.chapter) {
+        setIsRedirecting(true);
+        router.push(`/bible/${state.book}/${state.chapter}`);
+      }
+    }
+  }, [router]);
 
   const readings = getDailyReadings(today);
 
@@ -41,6 +54,17 @@ export default function Home() {
 
   const oldTestament = books?.filter((b: any) => String(b.testament) === "OLD") ?? [];
   const newTestament = books?.filter((b: any) => String(b.testament) === "NEW") ?? [];
+
+  if (isRedirecting) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white space-y-4">
+        <Loader2 className="animate-spin text-indigo-600" size={48} strokeWidth={1} />
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-indigo-950 animate-pulse">
+          Resuming the Word...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-white">
@@ -63,33 +87,6 @@ export default function Home() {
           </h1>
           <p className="text-slate-400 font-medium">The Holy Catholic Bible Codex</p>
         </header>
-
-        {/* Continue Reading - Main Action */}
-        {lastRead && (
-          <section>
-            <Link href={`/bible/${lastRead.book}/${lastRead.chapter}`}>
-              <div className="group relative overflow-hidden rounded-3xl bg-indigo-950 p-8 text-white shadow-2xl transition-all hover:scale-[1.01] active:scale-[0.99]">
-                <div className="absolute right-0 top-0 -mr-8 -mt-8 h-64 w-64 rounded-full bg-indigo-900/50 blur-3xl transition-all group-hover:bg-indigo-800/50" />
-                <div className="relative z-10 space-y-4">
-                  <div className="inline-flex items-center rounded-full bg-indigo-800/50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-200">
-                    Last Read
-                  </div>
-                  <div>
-                    <h2 className="text-5xl font-bold capitalize tracking-tighter">
-                      {lastRead.book} <span className="text-indigo-400">{lastRead.chapter}</span>
-                    </h2>
-                    <p className="mt-2 text-indigo-200 font-medium opacity-80 italic">
-                      Click to continue your prayer.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm font-bold text-indigo-400">
-                    Resume Word <ChevronRight size={16} />
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </section>
-        )}
 
         {/* Bible Browser - Integrated directly */}
         <section className="space-y-8">

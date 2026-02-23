@@ -215,6 +215,17 @@ exports.Prisma.UserScalarFieldEnum = {
   image: 'image'
 };
 
+exports.Prisma.UserPreferenceScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  lastBook: 'lastBook',
+  lastChapter: 'lastChapter',
+  readingSpeed: 'readingSpeed',
+  fontSize: 'fontSize',
+  theme: 'theme',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.VerificationTokenScalarFieldEnum = {
   identifier: 'identifier',
   token: 'token',
@@ -262,6 +273,7 @@ exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
   User: 'User',
+  UserPreference: 'UserPreference',
   VerificationToken: 'VerificationToken'
 };
 

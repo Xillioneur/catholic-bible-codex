@@ -10,11 +10,14 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Button } from "~/components/ui/button";
-import { ChevronLeft, ChevronRight, Menu, Columns, LayoutList, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, ChevronRight, Menu, Columns, LayoutList, MessageCircle, Settings2, Sliders } from "lucide-react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { VerseActions } from "./verse-actions";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import { Slider } from "~/components/ui/slider";
+import { useSession } from "next-auth/react";
 
 interface BibleReaderProps {
   bookAbbr: string;
@@ -22,9 +25,26 @@ interface BibleReaderProps {
 }
 
 export function BibleReader({ bookAbbr, chapterNum }: BibleReaderProps) {
+  const { data: session } = useSession();
   const [translation, setTranslation] = useState("DR");
   const [isParallel, setIsParallel] = useState(false);
   const [parallelTranslation, setParallelTranslation] = useState("NABRE");
+  
+  // Premium Preferences
+  const { data: prefs } = api.bible.getUserPreferences.useQuery(undefined, {
+    enabled: !!session?.user,
+  });
+  const updatePref = api.bible.updateUserPreferences.useMutation();
+
+  const [readingSpeed, setReadingSpeed] = useState(1.0);
+  const [fontSize, setFontSize] = useState(18);
+
+  useEffect(() => {
+    if (prefs) {
+      setReadingSpeed(prefs.readingSpeed);
+      setFontSize(prefs.fontSize);
+    }
+  }, [prefs]);
 
   const { data: bookData } = api.bible.getBookByAbbreviation.useQuery({
     abbreviation: bookAbbr,
@@ -51,7 +71,7 @@ export function BibleReader({ bookAbbr, chapterNum }: BibleReaderProps) {
   if (isLoading) {
     return (
       <div className="max-w-3xl mx-auto p-8 space-y-4">
-        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-10 w-48 rounded-xl" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-3/4" />
@@ -79,6 +99,63 @@ export function BibleReader({ bookAbbr, chapterNum }: BibleReaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Reader Settings */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full text-slate-400">
+                <Settings2 size={18} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-6 rounded-3xl shadow-2xl border-indigo-50" align="end">
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 border-b pb-2">
+                  <Sliders size={14} className="text-indigo-600" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-950">Reader Settings</span>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-500">Font Size</span>
+                    <span className="text-xs font-bold text-indigo-600">{fontSize}px</span>
+                  </div>
+                  <Slider 
+                    value={[fontSize]} 
+                    min={14} max={32} step={1}
+                    onValueChange={(v) => {
+                      const val = v[0] ?? 18;
+                      setFontSize(val);
+                      if (session?.user) updatePref.mutate({ fontSize: val });
+                    }}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-slate-500">Audio Speed</span>
+                    <span className="text-xs font-bold text-indigo-600">{readingSpeed}x</span>
+                  </div>
+                  <Slider 
+                    value={[readingSpeed]} 
+                    min={0.5} max={2.0} step={0.1}
+                    onValueChange={(v) => {
+                      const val = v[0] ?? 1.0;
+                      setReadingSpeed(val);
+                      if (session?.user) updatePref.mutate({ readingSpeed: val });
+                    }}
+                  />
+                </div>
+
+                {!session?.user && (
+                  <div className="pt-4 border-t">
+                    <p className="text-[10px] text-slate-400 italic text-center">
+                      Sign in to sync these settings across devices.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <Button 
             variant="ghost" 
             size="icon" 
@@ -134,6 +211,7 @@ export function BibleReader({ bookAbbr, chapterNum }: BibleReaderProps) {
                     <p 
                       className="hover:text-indigo-950 transition-colors leading-[1.8] text-indigo-900/90 selection:bg-indigo-100 selection:text-indigo-900 rounded-sm px-1"
                       style={{ 
+                        fontSize: `${fontSize}px`,
                         backgroundColor: v.highlights?.[0]?.color ? `${v.highlights[0].color}20` : 'transparent',
                         borderLeft: v.highlights?.[0]?.color ? `3px solid ${v.highlights[0].color}` : 'none',
                         paddingLeft: v.highlights?.[0]?.color ? '8px' : '4px'
@@ -170,7 +248,7 @@ export function BibleReader({ bookAbbr, chapterNum }: BibleReaderProps) {
                       {v.number}
                     </span>
                     <div className="flex-1">
-                      <p className="leading-[1.8] text-slate-600">
+                      <p className="leading-[1.8] text-slate-600" style={{ fontSize: `${fontSize}px` }}>
                         {v.text}
                       </p>
                     </div>

@@ -157,9 +157,24 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  bookmarks  Bookmark[]
-  highlights Highlight[]
-  notes      Note[]
+  bookmarks   Bookmark[]
+  highlights  Highlight[]
+  notes       Note[]
+  preferences UserPreference?
+}
+
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lastBook     String? // e.g. "jn"
+  lastChapter  Int? // e.g. 1
+  readingSpeed Float   @default(1.0)
+  fontSize     Int     @default(18)
+  theme        String  @default("system")
+
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
