@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 /**
- * Verbum Domini Entry Point
+ * Catholic Bible Codex Entry Point
  * Automatically resumes the last read position for zero-click access.
  */
 export default function EntryGate() {
@@ -33,7 +33,7 @@ export default function EntryGate() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-white space-y-4">
       <Loader2 className="animate-spin text-indigo-600" size={48} strokeWidth={1} />
       <p className="text-xs font-bold uppercase tracking-[0.3em] text-indigo-950 animate-pulse">
-        Resuming the Word...
+        Opening the Codex...
       </p>
     </div>
   );

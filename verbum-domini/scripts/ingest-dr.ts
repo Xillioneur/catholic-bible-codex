@@ -52,7 +52,7 @@ async function main() {
     throw new Error("DR translation not found in DB. Run seed first.");
   }
 
-  console.log("Ingesting verses...");
+  console.log("Ingesting verses into Catholic Bible Codex...");
 
   for (const [jsonBookName, chapters] of Object.entries(data)) {
     const dbBookName = BOOK_MAPPING[jsonBookName] || jsonBookName;

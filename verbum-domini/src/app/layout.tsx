@@ -6,12 +6,13 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import { TooltipProvider } from "~/components/ui/tooltip";
 import { SessionProvider } from "next-auth/react";
-import { SidebarProvider } from "~/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "~/components/ui/sidebar";
 import { AppSidebar } from "~/components/app-sidebar";
 import { Toaster } from "~/components/ui/sonner";
+import { LiturgicalThemeProvider } from "~/components/liturgical-theme-provider";
 
 export const metadata: Metadata = {
-  title: "Verbum Domini - Catholic Bible Codex",
+  title: "Catholic Bible Codex",
   description: "A premium, modern Progressive Web Application for reading, studying, and praying with the full Catholic Bible (73-book canon).",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
   manifest: "/manifest.json",
@@ -43,9 +44,10 @@ export default function RootLayout({
             <TooltipProvider>
               <SidebarProvider>
                 <AppSidebar />
-                <div className="flex-1 min-w-0">
+                <SidebarInset>
+                  <LiturgicalThemeProvider />
                   {children}
-                </div>
+                </SidebarInset>
                 <Toaster position="top-center" />
               </SidebarProvider>
             </TooltipProvider>

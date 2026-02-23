@@ -1,29 +1,53 @@
-# Create T3 App
+# Catholic Bible Codex
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+**Catholic Bible Codex** is a premium, modern Progressive Web Application (PWA) designed for reading, studying, and praying with the full Catholic Bible (73-book canon).
 
-## What's next? How do I make an app with this?
+## Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+-   **Full Catholic Canon:** Complete 73-book Bible, including the Deuterocanonical books.
+-   **Public Domain Excellence:** Primarily powered by the Douay-Rheims (Challoner Revision) translation.
+-   **Liturgical Sync:** Automatically themes itself based on the current Catholic Church season (Lent, Easter, Advent, etc.).
+-   **Study Tools:** Advanced verse action menu for bookmarks, liturgical highlighting, and personal spiritual reflections.
+-   **Catechism Integration:** Direct cross-links to the Catechism of the Catholic Church.
+-   **Offline First:** Full PWA capabilities with instant loading and offline reading support.
+-   **Zero-Click Resume:** Automatically returns you to your last saved prayer spot the moment you open the app.
+-   **Premium Typography:** Optimized for deep focus and prayerful reading with modern serif fonts.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+-   **Framework:** Next.js 16.1 (App Router)
+-   **Language:** TypeScript 5.8 (Strict Mode)
+-   **Database:** Prisma 6 + PostgreSQL (Neon)
+-   **API:** tRPC 11 + TanStack Query 5
+-   **Authentication:** Auth.js (NextAuth v5) with Google OAuth
+-   **Styling:** Tailwind CSS 4 + shadcn/ui
+-   **PWA:** Serwist (Service Workers)
+-   **Liturgy:** Romcal
 
-## Learn More
+## Getting Started
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+1.  **Install dependencies:**
+    ```bash
+    pnpm install
+    ```
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+2.  **Configure environment:**
+    Copy `.env.example` to `.env` and fill in your database and Google OAuth credentials.
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+3.  **Sync Database:**
+    ```bash
+    npx prisma db push
+    npx prisma db seed
+    npx tsx scripts/ingest-dr.ts
+    ```
 
-## How do I deploy this?
+4.  **Run Development Server:**
+    ```bash
+    pnpm dev
+    ```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+## License
+
+This project is intended for personal and community spiritual growth. The Douay-Rheims text is in the public domain.
+
+**All glory to God. Amen and selah.**

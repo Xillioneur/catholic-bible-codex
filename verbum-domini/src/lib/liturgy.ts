@@ -7,6 +7,7 @@ export interface LiturgicalDay {
   color: string;
   season: string;
   rank: string;
+  hex: string;
 }
 
 export async function getLiturgicalDay(date: Date = new Date()): Promise<LiturgicalDay> {
@@ -16,6 +17,16 @@ export async function getLiturgicalDay(date: Date = new Date()): Promise<Liturgi
   
   const day = calendar.find((d: any) => moment(d.moment).isSame(momentDate, "day"));
 
+  // Theme Color Map
+  const colorHexMap: Record<string, string> = {
+    ordinary: "#059669", // Green
+    lent: "#7c3aed",     // Violet
+    easter: "#fbbf24",   // Gold
+    advent: "#4f46e5",   // Deep Blue/Violet
+    martyr: "#dc2626",   // Red
+    rose: "#f472b6",     // Rose
+  };
+
   if (!day) {
     return {
       date: date.toISOString(),
@@ -23,10 +34,10 @@ export async function getLiturgicalDay(date: Date = new Date()): Promise<Liturgi
       color: "ordinary",
       season: "Ordinary Time",
       rank: "Feria",
+      hex: colorHexMap.ordinary!,
     };
   }
 
-  // Map romcal colors to our liturgical color names
   const colorMap: Record<string, string> = {
     [LiturgicalColors.GREEN]: "ordinary",
     [LiturgicalColors.VIOLET]: "lent",
@@ -35,16 +46,18 @@ export async function getLiturgicalDay(date: Date = new Date()): Promise<Liturgi
     [LiturgicalColors.ROSE]: "rose",
   };
 
+  const colorKey = colorMap[day.color] || "ordinary";
+
   return {
     date: date.toISOString(),
     name: day.name,
-    color: colorMap[day.color] || "ordinary",
+    color: colorKey,
     season: day.season ? (typeof day.season === 'string' ? day.season : (day.season as any).name || "Unknown Season") : "Unknown Season",
     rank: day.type,
+    hex: colorHexMap[colorKey] || colorHexMap.ordinary!,
   };
 }
 
-// Hardcoded sample readings for 2026-02-23 (Lent Monday)
 export function getDailyReadings(_date: Date) {
   return {
     firstReading: {

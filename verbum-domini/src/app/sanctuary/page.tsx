@@ -12,19 +12,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Skeleton } from "~/components/ui/skeleton";
 
 export default function SanctuaryPage() {
-  const lastRead = useLastRead();
+  const { lastRead } = useLastRead();
   const today = new Date();
   const { data: books, isLoading: booksLoading } = api.bible.getBooks.useQuery();
+  const [mounted, setMounted] = useState(false);
   
   const [liturgicalDay, setLiturgicalDay] = useState<LiturgicalDay>({
     date: today.toISOString(),
     name: "Loading sanctuary...",
     color: "ordinary",
     season: "Ordinary Time",
-    rank: "Feria"
+    rank: "Feria",
+    hex: "#059669"
   });
 
   useEffect(() => {
+    setMounted(true);
     import("~/lib/liturgy").then(m => m.getLiturgicalDay(today).then(setLiturgicalDay));
   }, []);
 
@@ -57,20 +60,20 @@ export default function SanctuaryPage() {
       <div className="container max-w-5xl mx-auto px-6 py-12 space-y-12">
         <header className="space-y-2">
           <h1 className="text-4xl font-bold text-indigo-950 tracking-tighter">
-            Daily Sanctuary
+            Catholic Bible Codex
           </h1>
-          <p className="text-slate-400 font-medium">Sacred readings and the 73-book library.</p>
+          <p className="text-slate-400 font-medium">Sacred readings and the 73-book canonical library.</p>
         </header>
 
         {/* Continue Reading Card */}
-        {lastRead && (
+        {mounted && lastRead && (
           <section>
             <Link href={`/bible/${lastRead.book}/${lastRead.chapter}`}>
               <div className="group relative overflow-hidden rounded-3xl bg-indigo-950 p-8 text-white shadow-2xl transition-all hover:scale-[1.01] active:scale-[0.99]">
                 <div className="absolute right-0 top-0 -mr-8 -mt-8 h-64 w-64 rounded-full bg-indigo-900/50 blur-3xl transition-all group-hover:bg-indigo-800/50" />
                 <div className="relative z-10 space-y-4">
                   <div className="inline-flex items-center rounded-full bg-indigo-800/50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-indigo-200">
-                    Your Progress
+                    Saved Progress
                   </div>
                   <div>
                     <h2 className="text-5xl font-bold capitalize tracking-tighter">
@@ -81,7 +84,7 @@ export default function SanctuaryPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-sm font-bold text-indigo-400">
-                    Enter the Word <ChevronRight size={16} />
+                    Open Codex <ChevronRight size={16} />
                   </div>
                 </div>
               </div>
@@ -91,9 +94,9 @@ export default function SanctuaryPage() {
 
         <section className="space-y-8">
           <div className="flex items-center justify-between border-b pb-4">
-            <h3 className="text-xl font-bold text-indigo-950">Canonical Library</h3>
+            <h3 className="text-xl font-bold text-indigo-950">Inspired Library</h3>
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              73 Inspired Books
+              73 Canonical Books
             </div>
           </div>
 
@@ -147,7 +150,7 @@ export default function SanctuaryPage() {
         </section>
 
         <footer className="pt-12 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-          <div>Verbum Domini Codex</div>
+          <div>Catholic Bible Codex</div>
           <div className="italic font-serif normal-case tracking-normal text-sm">"In the beginning was the Word."</div>
           <div>AD MMXXVI</div>
         </footer>

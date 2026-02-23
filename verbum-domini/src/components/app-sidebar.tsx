@@ -4,6 +4,7 @@ import { Home, BookOpen, Library, Settings, ChevronRight, User, LogOut, LogIn, C
 import { api } from "~/trpc/react";
 import { useLastRead } from "~/hooks/use-last-read";
 import { useSession, signOut, signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 import {
   Sidebar,
@@ -32,10 +33,19 @@ import {
 export function AppSidebar() {
   const { data: books } = api.bible.getBooks.useQuery();
   const { data: session } = useSession();
-  const lastRead = useLastRead();
+  const { lastRead } = useLastRead();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const oldTestament = books?.filter((b) => b.testament === "OLD") ?? [];
   const newTestament = books?.filter((b) => b.testament === "NEW") ?? [];
+
+  const bibleUrl = mounted && lastRead 
+    ? `/bible/${lastRead.book}/${lastRead.chapter}` 
+    : "/bible";
 
   const mainItems = [
     {
@@ -45,7 +55,7 @@ export function AppSidebar() {
     },
     {
       title: "Bible",
-      url: lastRead ? `/bible/${lastRead.book}/${lastRead.chapter}` : "/bible",
+      url: bibleUrl,
       icon: BookOpen,
     },
     {
@@ -59,7 +69,7 @@ export function AppSidebar() {
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-indigo-900 font-bold tracking-tighter uppercase text-[10px]">Verbum Domini</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-indigo-900 font-bold tracking-tighter uppercase text-[10px]">Catholic Bible Codex</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
