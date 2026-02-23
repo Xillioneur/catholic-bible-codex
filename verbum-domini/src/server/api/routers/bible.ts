@@ -21,15 +21,6 @@ export const bibleRouter = createTRPCRouter({
       });
     }),
 
-  getBookChapters: publicProcedure
-    .input(z.object({ bookId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      return ctx.db.chapter.findMany({
-        where: { bookId: input.bookId },
-        orderBy: { number: "asc" },
-      });
-    }),
-
   getChapterVerses: publicProcedure
     .input(z.object({ 
       bookAbbreviation: z.string(), 
@@ -58,52 +49,67 @@ export const bibleRouter = createTRPCRouter({
 
       if (!chapter) return null;
 
-      return ctx.db.verse.findMany({
+      const verses = await ctx.db.verse.findMany({
         where: {
           chapterId: chapter.id,
           translationId: translation.id,
         },
         orderBy: { number: "asc" },
+        include: {
+          bookmarks: ctx.session?.user ? { where: { userId: ctx.session.user.id } } : false,
+          highlights: ctx.session?.user ? { where: { userId: ctx.session.user.id } } : false,
+          notes: ctx.session?.user ? { where: { userId: ctx.session.user.id } } : false,
+        }
       });
-    }),
 
-  getVerse: publicProcedure
-    .input(
-      z.object({
-        bookName: z.string(),
-        chapterNumber: z.number(),
-        verseNumber: z.number(),
-        translationId: z.string(),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      return ctx.db.verse.findFirst({
-        where: {
-          bookName: input.bookName,
-          chapterNumber: input.chapterNumber,
-          number: input.verseNumber,
-          translationId: input.translationId,
-        },
-      });
+      return verses;
     }),
 
   getTranslations: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.translation.findMany();
   }),
 
-  // Protected procedures for user interaction
-  addNote: protectedProcedure
-    .input(z.object({ verseId: z.string(), content: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.note.create({
-        data: {
-          content: input.content,
-          verseId: input.verseId,
-          userId: ctx.session.user.id,
-        },
-      });
-    }),
+  getUserLibrary: protectedProcedure.query(async ({ ctx }) => {
+    const bookmarks = await ctx.db.bookmark.findMany({
+      where: { userId: ctx.session.user.id },
+      include: {
+        verse: {
+          include: {
+            chapter: { include: { book: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
 
+    const notes = await ctx.db.note.findMany({
+      where: { userId: ctx.session.user.id },
+      include: {
+        verse: {
+          include: {
+            chapter: { include: { book: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const highlights = await ctx.db.highlight.findMany({
+      where: { userId: ctx.session.user.id },
+      include: {
+        verse: {
+          include: {
+            chapter: { include: { book: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    return { bookmarks, notes, highlights };
+  }),
+
+  // User Actions
   toggleBookmark: protectedProcedure
     .input(z.object({ verseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -117,9 +123,7 @@ export const bibleRouter = createTRPCRouter({
       });
 
       if (existing) {
-        await ctx.db.bookmark.delete({
-          where: { id: existing.id },
-        });
+        await ctx.db.bookmark.delete({ where: { id: existing.id } });
         return { bookmarked: false };
       }
 
@@ -130,5 +134,55 @@ export const bibleRouter = createTRPCRouter({
         },
       });
       return { bookmarked: true };
+    }),
+
+  setHighlight: protectedProcedure
+    .input(z.object({ verseId: z.string(), color: z.string().nullable() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!input.color) {
+        await ctx.db.highlight.deleteMany({
+          where: { userId: ctx.session.user.id, verseId: input.verseId }
+        });
+        return { highlighted: false };
+      }
+
+      await ctx.db.highlight.upsert({
+        where: {
+          userId_verseId: {
+            userId: ctx.session.user.id,
+            verseId: input.verseId,
+          },
+        },
+        update: { color: input.color },
+        create: {
+          userId: ctx.session.user.id,
+          verseId: input.verseId,
+          color: input.color,
+        },
+      });
+      return { highlighted: true, color: input.color };
+    }),
+
+  upsertNote: protectedProcedure
+    .input(z.object({ verseId: z.string(), content: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.db.note.findFirst({
+        where: { userId: ctx.session.user.id, verseId: input.verseId }
+      });
+
+      if (existing) {
+        return ctx.db.note.update({
+          where: { id: existing.id },
+          data: { content: input.content }
+        });
+      }
+
+      return ctx.db.note.create({
+        data: {
+          content: input.content,
+          verseId: input.verseId,
+          userId: ctx.session.user.id,
+        },
+      });
     }),
 });

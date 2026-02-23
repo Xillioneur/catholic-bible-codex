@@ -5,6 +5,10 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { TooltipProvider } from "~/components/ui/tooltip";
+import { SessionProvider } from "next-auth/react";
+import { SidebarProvider } from "~/components/ui/sidebar";
+import { AppSidebar } from "~/components/app-sidebar";
+import { Toaster } from "~/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Verbum Domini - Catholic Bible Codex",
@@ -33,12 +37,20 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable}`}>
-      <body>
-        <TRPCReactProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-        </TRPCReactProvider>
+      <body className="antialiased">
+        <SessionProvider>
+          <TRPCReactProvider>
+            <TooltipProvider>
+              <SidebarProvider>
+                <AppSidebar />
+                <div className="flex-1 min-w-0">
+                  {children}
+                </div>
+                <Toaster position="top-center" />
+              </SidebarProvider>
+            </TooltipProvider>
+          </TRPCReactProvider>
+        </SessionProvider>
       </body>
     </html>
   );

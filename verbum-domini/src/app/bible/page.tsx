@@ -11,10 +11,11 @@ export default function BiblePage() {
 
   if (isLoading) {
     return (
-      <div className="p-8">
+      <div className="p-12 max-w-5xl mx-auto space-y-8">
+        <Skeleton className="h-12 w-64 rounded-2xl" />
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {Array.from({ length: 24 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
+            <Skeleton key={i} className="h-24 w-full rounded-2xl" />
           ))}
         </div>
       </div>
@@ -23,8 +24,8 @@ export default function BiblePage() {
 
   if (error) {
     return (
-      <div className="p-8 text-red-500">
-        <h2 className="text-xl font-bold">Error loading books</h2>
+      <div className="p-12 text-red-500">
+        <h2 className="text-xl font-bold">Error loading library</h2>
         <p>{error.message}</p>
       </div>
     );
@@ -34,68 +35,51 @@ export default function BiblePage() {
   const newTestament = books?.filter((b: any) => String(b.testament) === "NEW") ?? [];
 
   return (
-    <div className="p-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-indigo-900">Holy Bible</h1>
-        <p className="text-slate-600">Explore the full 73-book Catholic canon. ({books?.length ?? 0} books)</p>
+    <div className="p-12 max-w-5xl mx-auto space-y-12">
+      <header className="space-y-2">
+        <h1 className="text-4xl font-bold text-indigo-950 tracking-tighter">Canonical Library</h1>
+        <p className="text-slate-400 font-medium">The complete 73-book Catholic Bible canon.</p>
       </header>
 
-      {(!books || books.length === 0) ? (
-        <div className="text-center py-20 bg-slate-50 rounded-xl border border-dashed">
-          <p className="text-slate-500 italic">No books found in the database.</p>
-          <p className="text-sm text-slate-400 mt-2">
-            (Did you run npx prisma db seed?)
-          </p>
-        </div>
-      ) : (
-        <>
-          {oldTestament.length === 0 && newTestament.length === 0 && (
-            <div className="p-4 bg-amber-50 text-amber-800 rounded-lg mb-4">
-              Warning: Books loaded ({books.length}) but none matched "OLD" or "NEW" testament filters.
-              Raw testament value of first book: "{books[0]?.testament}"
-            </div>
-          )}
-          <Tabs defaultValue="old" className="w-full">
-            <TabsList className="mb-6">
-              <TabsTrigger value="old">Old Testament ({oldTestament.length})</TabsTrigger>
-              <TabsTrigger value="new">New Testament ({newTestament.length})</TabsTrigger>
-            </TabsList>
-            <TabsContent value="old">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {oldTestament.map((book: any) => (
-                  <Link key={book.id} href={`/bible/${book.abbreviation_case_insensitive}/1`}>
-                    <Card className="hover:bg-indigo-50 transition-colors cursor-pointer border-indigo-100">
-                      <CardContent className="p-4 flex flex-col items-center justify-center h-full text-center">
-                        <span className="text-sm font-semibold text-indigo-700">{book.abbreviation}</span>
-                        <span className="text-sm font-medium">{book.name}</span>
-                        {book.isDeuterocanonical && (
-                          <span className="text-[10px] uppercase tracking-wider text-amber-600 font-bold mt-1">
-                            Deuterocanon
-                          </span>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </TabsContent>
-            <TabsContent value="new">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {newTestament.map((book: any) => (
-                  <Link key={book.id} href={`/bible/${book.abbreviation_case_insensitive}/1`}>
-                    <Card className="hover:bg-indigo-50 transition-colors cursor-pointer border-indigo-100">
-                      <CardContent className="p-4 flex flex-col items-center justify-center h-full text-center">
-                        <span className="text-sm font-semibold text-indigo-700">{book.abbreviation}</span>
-                        <span className="text-sm font-medium">{book.name}</span>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </>
-      )}
+      <Tabs defaultValue="old" className="w-full">
+        <TabsList className="mb-8 bg-slate-50 p-1 rounded-xl">
+          <TabsTrigger value="old" className="rounded-lg px-12">Old Testament</TabsTrigger>
+          <TabsTrigger value="new" className="rounded-lg px-12">New Testament</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="old" className="focus-visible:outline-none">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {oldTestament.map((book: any) => (
+              <Link key={book.id} href={`/bible/${book.abbreviation_case_insensitive}/1`}>
+                <Card className="group hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer border-slate-100 rounded-2xl">
+                  <CardContent className="p-4 flex flex-col items-center justify-center h-24 text-center">
+                    <span className="text-xs font-bold text-slate-400 group-hover:text-indigo-600 transition-colors uppercase tracking-widest">{book.abbreviation}</span>
+                    <span className="text-sm font-bold text-indigo-950 mt-1">{book.name}</span>
+                    {book.isDeuterocanonical && (
+                      <div className="w-1 h-1 rounded-full bg-amber-400 mt-2" />
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="new" className="focus-visible:outline-none">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {newTestament.map((book: any) => (
+              <Link key={book.id} href={`/bible/${book.abbreviation_case_insensitive}/1`}>
+                <Card className="group hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer border-slate-100 rounded-2xl">
+                  <CardContent className="p-4 flex flex-col items-center justify-center h-24 text-center">
+                    <span className="text-xs font-bold text-slate-400 group-hover:text-indigo-600 transition-colors uppercase tracking-widest">{book.abbreviation}</span>
+                    <span className="text-sm font-bold text-indigo-950 mt-1">{book.name}</span>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
