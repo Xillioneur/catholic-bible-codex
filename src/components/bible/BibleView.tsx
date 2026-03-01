@@ -4,6 +4,7 @@ import React, { useRef, useImperativeHandle, forwardRef, useState } from "react"
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { VerseOverlay } from "./VerseOverlay";
 import { useStudyTools } from "~/hooks/useStudyTools";
+import { Play } from "lucide-react";
 
 interface Verse {
   id: string;
@@ -37,7 +38,7 @@ export interface BibleViewHandle {
 }
 
 interface BibleViewProps {
-  onAudioRequest: (text: string, reference: string) => void;
+  onAudioRequest: (text: string, reference: string, index?: number, startAutoplay?: boolean) => void;
 }
 
 export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioRequest }, ref) => {
@@ -110,14 +111,25 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
               )}
               
               <div 
-                onClick={() => setSelectedVerse(verse)}
-                className="flex items-baseline gap-3 group cursor-pointer hover:bg-app-surface -mx-2 px-2 py-1 rounded-md transition-colors"
+                className="flex items-baseline gap-3 group cursor-pointer -mx-2 px-2 py-1 rounded-md transition-colors"
                 style={{ backgroundColor: highlight ? `${highlight.color}20` : undefined }}
               >
-                <span className="text-[10px] font-bold text-fg-secondary w-6 shrink-0 text-right select-none font-sans">
-                  {verse.verseNumber}
-                </span>
-                <p className={`text-base md:text-lg leading-relaxed serif ${highlight ? "font-medium" : "text-app-fg opacity-90 group-hover:opacity-100"}`}>
+                {/* Play Trigger on Verse Number */}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAudioRequest(verse.text, `${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}`, verse.globalOrder, true);
+                  }}
+                  className="text-[10px] font-bold text-fg-secondary w-6 shrink-0 text-right select-none font-sans hover:text-sacred-gold transition-colors relative"
+                >
+                  <span className="group-hover:opacity-0 transition-opacity">{verse.verseNumber}</span>
+                  <Play size={10} className="absolute inset-0 m-auto opacity-0 group-hover:opacity-100 text-sacred-gold transition-opacity" fill="currentColor" />
+                </button>
+
+                <p 
+                  onClick={() => setSelectedVerse(verse)}
+                  className={`text-base md:text-lg leading-relaxed serif flex-1 ${highlight ? "font-medium" : "text-app-fg opacity-90 hover:opacity-100"}`}
+                >
                   {verse.text}
                 </p>
               </div>
@@ -133,7 +145,7 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
           text={selectedVerse.text}
           isOpen={!!selectedVerse}
           onClose={() => setSelectedVerse(null)}
-          onAudioRequest={onAudioRequest}
+          onAudioRequest={(t, r) => onAudioRequest(t, r, selectedVerse.globalOrder, false)}
         />
       )}
     </div>

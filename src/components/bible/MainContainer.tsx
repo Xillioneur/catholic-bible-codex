@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Search, ListFilter, Columns, Flame, Cross, Volume2, Square, EyeOff, Settings } from "lucide-react";
+import { Search, ListFilter, Columns, Flame, Cross, Headphones, Square, EyeOff, Settings, Play, ChevronRight } from "lucide-react";
 import { BibleView, type BibleViewHandle } from "./BibleView";
 import { PageView } from "./PageView";
 import { JumpTo } from "./JumpTo";
@@ -18,7 +18,7 @@ interface MainContainerProps {
 
 type ReadingMode = "SCROLL" | "PAGE";
 
-const BOOKS = ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"];
+const BOOKS = ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel"];
 const MOCK_TOTAL_VERSES = 35000;
 
 export function MainContainer({ season }: MainContainerProps) {
@@ -29,6 +29,7 @@ export function MainContainer({ season }: MainContainerProps) {
   const [isAutoplay, setIsAutoplay] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isMinimized, setIsMinimized] = useState(true);
+  const [hasStoredPosition, setHasStoredPosition] = useState(false);
   
   const bibleViewRef = useRef<BibleViewHandle>(null);
   const indexRef = useRef(currentVerseIndex);
@@ -38,7 +39,20 @@ export function MainContainer({ season }: MainContainerProps) {
   const audio = useBibleAudio();
   const isScrollingUp = useScrollDirection();
 
-  useEffect(() => { indexRef.current = currentVerseIndex; }, [currentVerseIndex]);
+  useEffect(() => {
+    const savedIndex = localStorage.getItem("vd_verse_index");
+    if (savedIndex) {
+      const idx = parseInt(savedIndex, 10);
+      setCurrentVerseIndex(idx);
+      setHasStoredPosition(true);
+    }
+  }, []);
+
+  useEffect(() => { 
+    indexRef.current = currentVerseIndex;
+    localStorage.setItem("vd_verse_index", currentVerseIndex.toString());
+  }, [currentVerseIndex]);
+
   useEffect(() => { autoplayRef.current = isAutoplay; }, [isAutoplay]);
 
   const getVerseAt = useCallback((index: number) => {
@@ -65,11 +79,16 @@ export function MainContainer({ season }: MainContainerProps) {
     }
   }, [getVerseAt, audio, readingMode]);
 
-  const handleAudioRequest = useCallback((text: string, reference: string, index?: number) => {
+  const handleAudioRequest = useCallback((text: string, reference: string, index?: number, startAutoplay?: boolean) => {
     if (index !== undefined) setCurrentVerseIndex(index);
-    setIsAutoplay(false);
-    audio.speak(text, reference);
-  }, [audio]);
+    if (startAutoplay) {
+      setIsAutoplay(true);
+      audio.speak(text, reference, { onEnd: playNextVerse });
+    } else {
+      setIsAutoplay(false);
+      audio.speak(text, reference);
+    }
+  }, [audio, playNextVerse]);
 
   const handleGlobalListen = () => {
     if (isAutoplay) {
@@ -92,15 +111,9 @@ export function MainContainer({ season }: MainContainerProps) {
   return (
     <div className="relative flex h-screen bg-app-bg text-app-fg transition-colors duration-500 overflow-hidden font-sans">
       
-      <button 
-        onClick={() => setIsHidden(false)}
-        className={`fixed left-0 top-1/2 -translate-y-1/2 z-[60] h-24 w-1 bg-gray-200 dark:bg-white/10 rounded-r-full transition-all duration-500 hover:w-3 hover:bg-sacred-gold group ${!isHidden ? "opacity-0 pointer-events-none -translate-x-full" : "opacity-100 translate-x-0"}`}
-        title="Reveal Menu"
-      />
+      <button onClick={() => setIsHidden(false)} className={`fixed left-0 top-1/2 -translate-y-1/2 z-[60] h-24 w-1 bg-gray-200 dark:bg-white/10 rounded-r-full transition-all duration-500 hover:w-3 hover:bg-sacred-gold group ${!isHidden ? "opacity-0 pointer-events-none -translate-x-full" : "opacity-100 translate-x-0"}`} title="Reveal Menu" />
 
-      <nav 
-        onMouseEnter={() => setIsMinimized(false)}
-        onMouseLeave={() => setIsMinimized(true)}
+      <nav onMouseEnter={() => setIsMinimized(false)} onMouseLeave={() => setIsMinimized(true)}
         className={`fixed left-3 top-1/2 -translate-y-1/2 z-50 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col items-center gap-1.5 p-1 bg-app-bg dark:bg-navy-900 backdrop-blur-xl border border-app-border rounded-2xl shadow-2xl ring-1 ring-black/5 ${isScrollingUp && !isHidden ? "translate-x-0 opacity-100 scale-100" : "-translate-x-32 opacity-0 scale-95 pointer-events-none"} ${isMinimized ? "w-11" : "w-48"}`}
       >
         <div className={`flex items-center gap-3 w-full px-2 py-2 border-b border-app-border mb-1 overflow-hidden transition-all ${isMinimized ? "justify-center" : "justify-start"}`}>
@@ -109,14 +122,21 @@ export function MainContainer({ season }: MainContainerProps) {
         </div>
 
         <div className="flex flex-col gap-1 w-full overflow-hidden">
-          <RailButton active={isAutoplay} onClick={handleGlobalListen} icon={isAutoplay ? <Square size={16} fill="currentColor" /> : <Volume2 size={16} />} label="Listen All" minimized={isMinimized} colorClass={isAutoplay ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-app-fg"} />
-          <RailButton onClick={() => setIsSanctuaryOpen(true)} icon={<Flame size={16} fill="currentColor" />} label="Daily Sanctuary" minimized={isMinimized} colorClass={seasonColor} />
-          <div className="h-px w-full bg-app-border my-1" />
-          <RailButton onClick={() => setReadingMode(prev => prev === "SCROLL" ? "PAGE" : "SCROLL")} icon={readingMode === "SCROLL" ? <Columns size={16} /> : <ListFilter size={16} />} label={readingMode === "SCROLL" ? "Page View" : "Scroll View"} minimized={isMinimized} colorClass="text-app-fg" />
+          {/* GROUP 1: THE COMPASS (Navigation) */}
           <RailButton onClick={() => setIsJumpToOpen(true)} icon={<Search size={16} />} label="Search & Jump" minimized={isMinimized} primary />
+          <RailButton onClick={() => setReadingMode(prev => prev === "SCROLL" ? "PAGE" : "SCROLL")} icon={readingMode === "SCROLL" ? <Columns size={16} /> : <ListFilter size={16} />} label={readingMode === "SCROLL" ? "Page View" : "Scroll View"} minimized={isMinimized} colorClass="text-app-fg" />
           
+          <div className="h-px w-full bg-app-border my-1" />
+
+          {/* GROUP 2: THE SANCTUARY (Spiritual Actions) */}
+          <RailButton onClick={() => setIsSanctuaryOpen(true)} icon={<Flame size={16} fill="currentColor" />} label="Today's Mass" minimized={isMinimized} colorClass={seasonColor} />
+          <RailButton active={isAutoplay} onClick={handleGlobalListen} icon={isAutoplay ? <Square size={16} fill="currentColor" /> : <Headphones size={16} />} label={isAutoplay ? "Stop Audio" : "Read Aloud"} minimized={isMinimized} colorClass={isAutoplay ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-app-fg"} />
+          
+          <div className="h-px w-full bg-app-border my-1" />
+
+          {/* GROUP 3: THE VESSEL (Interface) */}
           {!isMinimized && (
-            <div className="mt-2 animate-in fade-in slide-in-from-left-2 duration-300">
+            <div className="mt-1 animate-in fade-in slide-in-from-left-2 duration-300">
               <p className="text-[8px] font-bold uppercase tracking-widest text-app-fg-muted mb-2 px-2">Appearance</p>
               <ThemeSelector />
             </div>

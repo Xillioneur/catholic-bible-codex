@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bookmark, Highlighter, MessageSquare, BookOpen, Share2, Volume2, X, Check, ArrowUpRight, ChevronLeft } from "lucide-react";
+import { Bookmark, Highlighter, MessageSquare, BookOpen, Share2, Headphones, X, Check, ArrowUpRight, ChevronLeft } from "lucide-react";
 import { useStudyTools } from "~/hooks/useStudyTools";
 
 interface VerseOverlayProps {
@@ -61,12 +61,12 @@ export function VerseOverlay({ verseId, reference, text, isOpen, onClose, onAudi
               <div className="grid grid-cols-5 gap-1 mb-3">
                 <ActionButton 
                   icon={<Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />} 
-                  label={isBookmarked ? "Saved" : "Save"} 
+                  label="Save" 
                   active={isBookmarked}
                   onClick={() => toggleBookmark(verseId)}
                 />
                 <ActionButton 
-                  icon={<Volume2 size={18} />} 
+                  icon={<Headphones size={18} />} 
                   label="Listen" 
                   onClick={() => onAudioRequest(text, reference)}
                 />

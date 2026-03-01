@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, Calendar, BookOpen, Volume2 } from "lucide-react";
+import { X, Calendar, BookOpen, Headphones } from "lucide-react";
 import { api } from "~/trpc/react";
 import { getSeasonColor, type LiturgicalSeason } from "~/lib/liturgy";
 
@@ -39,9 +39,9 @@ export function DailySanctuary({ isOpen, onClose, season, onAudioRequest }: Dail
             <button 
               onClick={handleListenAll}
               className="p-1.5 rounded-md text-app-fg-muted hover:text-app-fg hover:bg-app-surface transition-colors"
-              title="Listen to Readings"
+              title="Read Aloud"
             >
-              <Volume2 size={14} />
+              <Headphones size={14} />
             </button>
             <button 
               onClick={onClose} 
