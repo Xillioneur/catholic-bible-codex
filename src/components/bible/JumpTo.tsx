@@ -11,7 +11,6 @@ interface JumpToProps {
   onJump: (globalOrder: number) => void;
 }
 
-// Re-using the same mock data for search consistency in prototype
 const BOOKS = [
   "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", 
   "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel",
@@ -38,11 +37,8 @@ export function JumpTo({ isOpen, onClose, onJump }: JumpToProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  
-  const books = api.bible.getBooks.useQuery(undefined, { enabled: isOpen });
   const workerRef = useRef<Worker | null>(null);
 
-  // Initialize Worker
   useEffect(() => {
     workerRef.current = new Worker(new URL("../../workers/bible-processor.ts", import.meta.url));
     workerRef.current.onmessage = (e: MessageEvent<WorkerResponse>) => {
@@ -54,11 +50,9 @@ export function JumpTo({ isOpen, onClose, onJump }: JumpToProps) {
     return () => workerRef.current?.terminate();
   }, []);
 
-  // Perform Search
   useEffect(() => {
     if (query.length > 1) {
       setIsSearching(true);
-      // Pass the mock data to the worker for the prototype search
       workerRef.current?.postMessage({ 
         type: "SEARCH", 
         payload: { query, verses: mockVersesForSearch } 
@@ -80,13 +74,13 @@ export function JumpTo({ isOpen, onClose, onJump }: JumpToProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/30 backdrop-blur-sm p-4 pt-16 transition-all">
-      <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-lg shadow-2xl border border-gray-200 dark:border-white/10 overflow-hidden animate-in fade-in zoom-in duration-100 ring-1 ring-black/5">
-        <div className="flex items-center border-b border-gray-100 dark:border-white/5 p-3 gap-3 bg-gray-50/50 dark:bg-white/5">
-          <Search className="text-gray-400" size={18} />
+    <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 pt-16 transition-all duration-500">
+      <div className="w-full max-w-lg bg-app-bg border border-app-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="flex items-center border-b border-app-border p-3 gap-3 bg-app-surface">
+          <Search className="text-app-fg-muted" size={18} />
           <input
             autoFocus
-            className="flex-1 bg-transparent text-base text-gray-900 dark:text-white outline-none placeholder:text-gray-400 font-medium"
+            className="flex-1 bg-transparent text-base text-app-fg outline-none placeholder:text-app-fg-muted font-medium"
             placeholder="Search verses or 'John 3:16'..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -94,15 +88,15 @@ export function JumpTo({ isOpen, onClose, onJump }: JumpToProps) {
           {isSearching && (
             <div className="h-4 w-4 border-2 border-sacred-gold border-t-transparent rounded-full animate-spin" />
           )}
-          <div className="px-1.5 py-0.5 rounded border border-gray-200 dark:border-white/10 text-[10px] font-bold text-gray-400 bg-white dark:bg-black/20">
+          <div className="px-1.5 py-0.5 rounded border border-app-border text-[10px] font-bold text-app-fg-muted bg-app-bg">
             ESC
           </div>
         </div>
 
-        <div className="max-h-[50vh] overflow-y-auto scrollbar-hide bg-white dark:bg-navy-950">
+        <div className="max-h-[50vh] overflow-y-auto scrollbar-hide">
           {query.length > 0 ? (
             <div className="py-2">
-              <h3 className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-gray-50/50 dark:bg-white/5">
+              <h3 className="px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-app-fg-muted bg-app-surface/50">
                 Results
               </h3>
               {results.length > 0 ? (
@@ -113,40 +107,40 @@ export function JumpTo({ isOpen, onClose, onJump }: JumpToProps) {
                       onJump(verse.globalOrder);
                       onClose();
                     }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-l-2 border-transparent hover:border-sacred-gold"
+                    className="w-full text-left px-4 py-3 hover:bg-app-surface transition-colors border-l-2 border-transparent hover:border-sacred-gold"
                   >
                     <div className="flex items-baseline justify-between mb-1">
                       <span className="text-xs font-bold text-sacred-gold">
                         {verse.reference}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-1 font-serif">
+                    <p className="text-sm text-app-fg-muted line-clamp-1 font-serif">
                       {verse.text}
                     </p>
                   </button>
                 ))
               ) : !isSearching && (
-                <div className="p-8 text-center text-gray-400 text-sm">
+                <div className="p-8 text-center text-app-fg-muted text-sm">
                   No matches found for "{query}"
                 </div>
               )}
             </div>
           ) : (
             <div className="p-2">
-              <h3 className="px-2 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
+              <h3 className="px-2 py-2 text-[10px] font-bold uppercase tracking-wider text-app-fg-muted mb-1">
                 Books of the Bible
               </h3>
               <div className="grid grid-cols-2 gap-1">
                 {BOOKS.map((book, idx) => (
                   <button
                     key={book}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 rounded-md transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-left text-app-fg-muted hover:text-app-fg hover:bg-app-surface rounded-md transition-colors"
                     onClick={() => {
                       onJump(idx * 500);
                       onClose();
                     }}
                   >
-                    <Book size={14} className="text-gray-400" />
+                    <Book size={14} className="text-app-fg-muted" />
                     <span className="font-medium">{book}</span>
                   </button>
                 ))}
@@ -155,7 +149,7 @@ export function JumpTo({ isOpen, onClose, onJump }: JumpToProps) {
           )}
         </div>
         
-        <div className="bg-gray-50 dark:bg-white/5 px-4 py-2 border-t border-gray-100 dark:border-white/5 flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+        <div className="bg-app-surface px-4 py-2 border-t border-app-border flex justify-between items-center text-[10px] text-app-fg-muted font-bold uppercase tracking-tighter">
           <span>Worker Core Active</span>
           <span>Verbum Domini</span>
         </div>

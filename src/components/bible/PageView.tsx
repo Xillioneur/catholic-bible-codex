@@ -75,13 +75,13 @@ export function PageView({ initialVerseIndex, onAudioRequest }: PageViewProps) {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-white dark:bg-navy-950 px-4 md:px-12 transition-colors duration-500">
-      <div className="mb-8 border-b border-gray-100 dark:border-white/5 pb-4 flex justify-between items-baseline">
+    <div className="w-full max-w-5xl mx-auto bg-app-bg text-app-fg px-4 md:px-12 transition-colors duration-500">
+      <div className="mb-8 border-b border-app-border pb-4 flex justify-between items-baseline">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white serif">
+          <h1 className="text-2xl font-bold serif">
             {currentVerse.bookName}
           </h1>
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mt-1">
+          <h2 className="text-sm font-semibold text-app-fg-muted uppercase tracking-wide mt-1">
             Chapter {currentVerse.chapterNumber}
           </h2>
         </div>
@@ -89,21 +89,21 @@ export function PageView({ initialVerseIndex, onAudioRequest }: PageViewProps) {
         <div className="flex gap-2">
           <button 
             onClick={handleListenChapter}
-            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 text-gray-400 hover:text-blue-500 transition-colors"
+            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors"
             title="Listen to Chapter"
           >
             <Volume2 size={20} />
           </button>
           <button 
             onClick={goToPrevChapter}
-            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 transition-colors"
+            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors"
             title="Previous Chapter"
           >
             <ChevronLeft size={20} />
           </button>
           <button 
             onClick={goToNextChapter}
-            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-white/5 text-gray-900 dark:text-white transition-colors"
+            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors"
             title="Next Chapter"
           >
             <ChevronRight size={20} />
@@ -113,28 +113,28 @@ export function PageView({ initialVerseIndex, onAudioRequest }: PageViewProps) {
 
       <div className="space-y-4">
         {chapterVerses.map((verse) => (
-          <div key={verse.id} className="relative pl-8 group hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg -ml-4 p-2 transition-colors cursor-pointer">
-            <span className="absolute left-2 top-3 text-[10px] font-bold text-gray-400 select-none font-sans">
+          <div key={verse.id} className="relative pl-8 group hover:bg-app-surface rounded-lg -ml-4 p-2 transition-colors cursor-pointer">
+            <span className="absolute left-2 top-3 text-[10px] font-bold text-app-fg-muted select-none font-sans">
               {verse.verseNumber}
             </span>
-            <p className="text-lg leading-relaxed serif text-gray-800 dark:text-gray-200">
+            <p className="text-lg leading-relaxed serif opacity-90 group-hover:opacity-100">
               {verse.text}
             </p>
           </div>
         ))}
       </div>
       
-      <div className="mt-16 flex justify-between pt-8 border-t border-gray-100 dark:border-white/5">
+      <div className="mt-16 flex justify-between pt-8 border-t border-app-border">
         <button 
           onClick={goToPrevChapter}
-          className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-app-fg-muted hover:bg-app-surface transition-colors"
         >
           <ChevronLeft size={16} />
           Previous
         </button>
         <button 
           onClick={goToNextChapter}
-          className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gray-900 dark:bg-white text-white dark:text-navy-950 hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-app-fg text-app-bg hover:opacity-90 transition-opacity"
         >
           Next Chapter
           <ChevronRight size={16} />

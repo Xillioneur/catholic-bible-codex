@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bookmark, Highlighter, MessageSquare, BookOpen, Share2, Volume2, X, Check, ArrowUpRight } from "lucide-react";
+import { Bookmark, Highlighter, MessageSquare, BookOpen, Share2, Volume2, X, Check, ArrowUpRight, ChevronLeft } from "lucide-react";
 import { useStudyTools } from "~/hooks/useStudyTools";
 
 interface VerseOverlayProps {
@@ -36,20 +36,20 @@ export function VerseOverlay({ verseId, reference, text, isOpen, onClose, onAudi
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[60] flex items-end justify-center p-4 animate-in slide-in-from-bottom duration-300">
-      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-navy-900/95 shadow-2xl backdrop-blur-xl">
+      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-app-border bg-app-bg/95 shadow-2xl backdrop-blur-xl transition-colors duration-500">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 dark:border-white/5 px-4 py-3 bg-gray-50/50 dark:bg-white/5">
+        <div className="flex items-center justify-between border-b border-app-border px-4 py-3 bg-app-surface">
           <div className="flex items-center gap-2">
             {view !== "ACTIONS" && (
-              <button onClick={() => setView("ACTIONS")} className="p-1 -ml-1 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <button onClick={() => setView("ACTIONS")} className="p-1 -ml-1 text-app-fg-muted hover:text-app-fg transition-colors">
                 <ChevronLeft size={14} />
               </button>
             )}
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-app-fg-muted">
               {view === "NOTE" ? "Spiritual Note" : view === "CATECHISM" ? "Church Teaching" : reference}
             </span>
           </div>
-          <button onClick={onClose} className="p-1 rounded-md text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <button onClick={onClose} className="p-1 rounded-md text-app-fg-muted hover:text-app-fg transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -87,14 +87,14 @@ export function VerseOverlay({ verseId, reference, text, isOpen, onClose, onAudi
                 <ActionButton icon={<Share2 size={18} />} label="Share" />
               </div>
 
-              <div className="flex items-center gap-2 p-2 bg-gray-100/50 dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
-                <Highlighter size={14} className="text-gray-400 ml-1" />
+              <div className="flex items-center gap-2 p-2 bg-app-surface rounded-xl border border-app-border">
+                <Highlighter size={14} className="text-app-fg-muted ml-1" />
                 <div className="flex-1 flex justify-around">
                   {COLORS.map((c) => (
                     <button
                       key={c.name}
                       onClick={() => setHighlight(verseId, c.hex)}
-                      className={`h-6 w-6 rounded-full border-2 transition-all hover:scale-110 active:scale-95 ${highlight?.color === c.hex ? "border-gray-900 dark:border-white ring-2 ring-gray-200 dark:ring-white/10" : "border-transparent opacity-70"}`}
+                      className={`h-6 w-6 rounded-full border-2 transition-all hover:scale-110 active:scale-95 ${highlight?.color === c.hex ? "border-app-fg ring-2 ring-app-border" : "border-transparent opacity-70"}`}
                       style={{ backgroundColor: c.hex }}
                     />
                   ))}
@@ -107,14 +107,14 @@ export function VerseOverlay({ verseId, reference, text, isOpen, onClose, onAudi
             <div className="space-y-3 animate-in fade-in duration-200">
               <textarea
                 autoFocus
-                className="w-full h-32 p-3 bg-gray-50 dark:bg-white/5 rounded-xl text-sm text-gray-800 dark:text-gray-200 outline-none border border-gray-100 dark:border-white/5 focus:border-sacred-gold dark:focus:border-sacred-gold transition-colors resize-none placeholder:text-gray-400"
+                className="w-full h-32 p-3 bg-app-surface rounded-xl text-sm text-app-fg outline-none border border-app-border focus:border-sacred-gold transition-colors resize-none placeholder:text-app-fg-muted"
                 placeholder="Write your reflection on this Word..."
                 value={noteContent}
                 onChange={(e) => setNoteContent(e.target.value)}
               />
               <button 
                 onClick={handleSaveNote}
-                className="w-full py-2.5 bg-gray-900 dark:bg-white text-white dark:text-navy-950 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-app-fg text-app-bg rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
               >
                 <Check size={14} />
                 Confirm Note
@@ -130,7 +130,7 @@ export function VerseOverlay({ verseId, reference, text, isOpen, onClose, onAudi
                   This verse is referenced in Catechism paragraph 121. "The Old Testament is an indispensable part of Sacred Scripture..."
                 </p>
               </div>
-              <button className="w-full py-2.5 bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-white/10 transition-colors">
+              <button className="w-full py-2.5 bg-app-bg border border-app-border text-app-fg-muted rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-app-surface transition-colors">
                 <ArrowUpRight size={14} />
                 Open Full Catechism
               </button>
@@ -142,13 +142,11 @@ export function VerseOverlay({ verseId, reference, text, isOpen, onClose, onAudi
   );
 }
 
-import { ChevronLeft } from "lucide-react";
-
 function ActionButton({ icon, label, onClick, active }: { icon: React.ReactNode; label: string; onClick?: () => void; active?: boolean }) {
   return (
     <button 
       onClick={onClick}
-      className={`flex flex-col items-center gap-1.5 rounded-xl py-3 transition-colors ${active ? "bg-gray-100 dark:bg-white/10 text-blue-600 dark:text-blue-400" : "hover:bg-gray-50 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400"}`}
+      className={`flex flex-col items-center gap-1.5 rounded-xl py-3 transition-colors ${active ? "bg-app-surface text-sacred-gold" : "hover:bg-app-surface text-app-fg-muted hover:text-app-fg"}`}
     >
       {icon}
       <span className="text-[9px] font-bold uppercase tracking-wide">{label}</span>

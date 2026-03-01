@@ -4,10 +4,9 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-serif), ui-serif, Georgia, serif;
 
-  /* Sacred Palette */
+  /* Sacred Palette Tokens */
   --color-sacred-gold: #d4af37;
-  --color-sacred-alabaster: #fafaf9;
-  --color-sacred-marian: #1e3a8a;
+  --color-sacred-gold-muted: rgba(212, 175, 55, 0.1);
   
   /* Liturgical Updates */
   --color-liturgical-green: #059669;
@@ -16,37 +15,53 @@
   --color-liturgical-red: #dc2626;
   --color-liturgical-rose: #f43f5e;
 
-  --color-navy-900: #0f172a;
-  --color-navy-950: #020617;
+  /* Semantic Theme Variables */
+  --color-app-bg: var(--bg-primary);
+  --color-app-fg: var(--fg-primary);
+  --color-app-fg-muted: var(--fg-secondary);
+  --color-app-border: var(--border-subtle);
+  --color-app-surface: var(--bg-secondary);
+}
+
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6; /* gray-100 */
+  --fg-primary: #020617;   /* navy-950 - Stronger black */
+  --fg-secondary: #4b5563; /* gray-600 - Readable gray */
+  --border-subtle: #e5e7eb; /* gray-200 */
+  
+  color-scheme: light;
+}
+
+.dark {
+  --bg-primary: #020617;   /* navy-950 */
+  --bg-secondary: #0f172a; /* navy-900 */
+  --fg-primary: #f8fafc;   /* slate-50 */
+  --fg-secondary: #94a3b8; /* slate-400 */
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  
+  color-scheme: dark;
 }
 
 @layer base {
+  html {
+    @apply transition-colors duration-500;
+  }
+  
   body {
-    @apply bg-white dark:bg-navy-950 text-navy-950 antialiased selection:bg-sacred-gold selection:text-white;
+    background-color: var(--bg-primary);
+    color: var(--fg-primary);
+    @apply antialiased selection:bg-sacred-gold selection:text-white;
   }
 
-  /* Custom Scrollbar Logic: Minimal & Responsive */
+  /* Custom Scrollbar */
   ::-webkit-scrollbar {
     width: 5px;
-    height: 5px;
   }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
   ::-webkit-scrollbar-thumb {
-    @apply bg-gray-200/50 dark:bg-white/10 rounded-full transition-colors;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-white/30;
-  }
-
-  /* Support for Firefox */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+    background-color: var(--fg-secondary);
+    opacity: 0.2;
+    border-radius: 10px;
   }
 }
 

@@ -45,7 +45,6 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const { highlights } = useStudyTools();
 
-  // Find the scrollable parent (the div in MainContainer)
   const getScrollElement = () => {
     return parentRef.current?.parentElement || null;
   };
@@ -66,7 +65,7 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
   return (
     <div
       ref={parentRef}
-      className="w-full max-w-5xl mx-auto bg-white dark:bg-navy-950 px-4 md:px-12"
+      className="w-full max-w-5xl mx-auto px-4 md:px-12 bg-app-bg text-app-fg"
     >
       <div
         style={{
@@ -96,15 +95,15 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
               className="py-1"
             >
               {isNewBook && (
-                <div className="pt-12 pb-6 border-b border-gray-100 dark:border-white/5 mb-6">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white serif tracking-tight">
+                <div className="pt-12 pb-6 border-b border-app-border mb-6">
+                  <h1 className="text-3xl font-bold serif tracking-tight">
                     {verse.bookName}
                   </h1>
                 </div>
               )}
               {isNewChapter && !isNewBook && (
                 <div className="pt-8 pb-4">
-                  <h2 className="text-xl font-semibold text-gray-500 dark:text-gray-400 serif">
+                  <h2 className="text-xl font-semibold text-fg-secondary serif">
                     Chapter {verse.chapterNumber}
                   </h2>
                 </div>
@@ -112,13 +111,13 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
               
               <div 
                 onClick={() => setSelectedVerse(verse)}
-                className="flex items-baseline gap-3 group cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 -mx-2 px-2 py-1 rounded-md transition-colors"
+                className="flex items-baseline gap-3 group cursor-pointer hover:bg-app-surface -mx-2 px-2 py-1 rounded-md transition-colors"
                 style={{ backgroundColor: highlight ? `${highlight.color}20` : undefined }}
               >
-                <span className="text-[10px] font-bold text-gray-400 w-6 shrink-0 text-right select-none font-sans">
+                <span className="text-[10px] font-bold text-fg-secondary w-6 shrink-0 text-right select-none font-sans">
                   {verse.verseNumber}
                 </span>
-                <p className={`text-base md:text-lg leading-relaxed serif ${highlight ? "font-medium" : "text-gray-800 dark:text-gray-200"}`}>
+                <p className={`text-base md:text-lg leading-relaxed serif ${highlight ? "font-medium" : "text-app-fg opacity-90 group-hover:opacity-100"}`}>
                   {verse.text}
                 </p>
               </div>
