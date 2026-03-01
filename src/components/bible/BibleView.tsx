@@ -45,11 +45,16 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const { highlights } = useStudyTools();
 
+  // Find the scrollable parent (the div in MainContainer)
+  const getScrollElement = () => {
+    return parentRef.current?.parentElement || null;
+  };
+
   const rowVirtualizer = useVirtualizer({
     count: mockVerses.length,
-    getScrollElement: () => parentRef.current,
+    getScrollElement,
     estimateSize: () => 60,
-    overscan: 10,
+    overscan: 15,
   });
 
   useImperativeHandle(ref, () => ({
@@ -61,7 +66,7 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
   return (
     <div
       ref={parentRef}
-      className="h-full w-full overflow-y-auto scrollbar-hide bg-white dark:bg-navy-950 px-4 md:px-8"
+      className="w-full max-w-5xl mx-auto bg-white dark:bg-navy-950 px-4 md:px-12"
     >
       <div
         style={{

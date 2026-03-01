@@ -5,16 +5,16 @@
   --font-serif: var(--font-serif), ui-serif, Georgia, serif;
 
   /* Sacred Palette */
-  --color-sacred-gold: #d4af37;     /* Divine Gold */
-  --color-sacred-alabaster: #fafaf9; /* Warm Alabaster White */
-  --color-sacred-marian: #1e3a8a;   /* Marian Blue */
+  --color-sacred-gold: #d4af37;
+  --color-sacred-alabaster: #fafaf9;
+  --color-sacred-marian: #1e3a8a;
   
   /* Liturgical Updates */
-  --color-liturgical-green: #059669;  /* Life of the Church */
-  --color-liturgical-violet: #6d28d9; /* Penance / Preparation */
-  --color-liturgical-gold: #fbbf24;   /* Resurrection / Glory */
-  --color-liturgical-red: #dc2626;    /* Sacrifice / Spirit */
-  --color-liturgical-rose: #f43f5e;   /* Joy */
+  --color-liturgical-green: #059669;
+  --color-liturgical-violet: #6d28d9;
+  --color-liturgical-gold: #fbbf24;
+  --color-liturgical-red: #dc2626;
+  --color-liturgical-rose: #f43f5e;
 
   --color-navy-900: #0f172a;
   --color-navy-950: #020617;
@@ -22,30 +22,36 @@
 
 @layer base {
   body {
-    @apply bg-sacred-alabaster text-navy-950 antialiased selection:bg-sacred-gold selection:text-white;
+    @apply bg-white dark:bg-navy-950 text-navy-950 antialiased selection:bg-sacred-gold selection:text-white;
   }
 
-  /* Divine Light Mode as Default */
-  .dark body {
-    @apply bg-navy-950 text-sacred-alabaster;
+  /* Custom Scrollbar Logic: Minimal & Responsive */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-200/50 dark:bg-white/10 rounded-full transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-white/30;
+  }
+
+  /* Support for Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
   }
 }
 
 @layer components {
   .serif {
     font-family: var(--font-serif);
-  }
-  
-  .glass {
-    @apply bg-white/70 backdrop-blur-xl border-b border-white/20;
-  }
-  
-  .dark .glass {
-    @apply bg-navy-950/70 border-white/5;
-  }
-
-  /* Textures inspired by light */
-  .luminous-shadow {
-    box-shadow: 0 0 40px -10px rgba(212, 175, 55, 0.2);
   }
 }

@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Geist, Crimson_Pro } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import { ThemeProvider } from "~/components/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Catholic Bible Codex – The Catholic Bible",
@@ -25,9 +26,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${crimson.variable}`}>
+    <html lang="en" className={`${geist.variable} ${crimson.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <ThemeProvider>
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Search, ListFilter, Columns, Flame, Cross, Volume2, Square, ChevronLeft, EyeOff, Menu, ChevronRight } from "lucide-react";
+import { Search, ListFilter, Columns, Flame, Cross, Volume2, Square, ChevronLeft, EyeOff, Menu, ChevronRight, Settings } from "lucide-react";
 import { BibleView, type BibleViewHandle } from "./BibleView";
 import { PageView } from "./PageView";
 import { JumpTo } from "./JumpTo";
@@ -10,6 +10,7 @@ import { AudioPanel } from "./AudioPanel";
 import { getSeasonColor, type LiturgicalSeason } from "~/lib/liturgy";
 import { useBibleAudio } from "~/hooks/useBibleAudio";
 import { useScrollDirection } from "~/hooks/useScrollDirection";
+import { ThemeSelector } from "~/components/ThemeSelector";
 
 interface MainContainerProps {
   season: LiturgicalSeason;
@@ -23,10 +24,12 @@ const MOCK_TOTAL_VERSES = 35000;
 export function MainContainer({ season }: MainContainerProps) {
   const [isJumpToOpen, setIsJumpToOpen] = useState(false);
   const [isSanctuaryOpen, setIsSanctuaryOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [readingMode, setReadingMode] = useState<ReadingMode>("SCROLL");
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [isAutoplay, setIsAutoplay] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true);
   
   const bibleViewRef = useRef<BibleViewHandle>(null);
   const indexRef = useRef(currentVerseIndex);
@@ -97,53 +100,77 @@ export function MainContainer({ season }: MainContainerProps) {
         title="Reveal Menu"
       />
 
-      {/* Ultra-Compact Side Rail */}
+      {/* Optimized Side Rail */}
       <nav 
-        className={`fixed left-3 top-1/2 -translate-y-1/2 z-50 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col items-center gap-1.5 p-1 bg-white/90 dark:bg-navy-900/90 backdrop-blur-xl border border-gray-200/60 dark:border-white/10 rounded-2xl shadow-2xl ring-1 ring-black/5 ${isScrollingUp && !isHidden ? "translate-x-0 opacity-100 scale-100" : "-translate-x-20 opacity-0 scale-95 pointer-events-none"}`}
+        onMouseEnter={() => setIsMinimized(false)}
+        onMouseLeave={() => setIsMinimized(true)}
+        className={`fixed left-3 top-1/2 -translate-y-1/2 z-50 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] flex flex-col items-center gap-1.5 p-1 bg-white/90 dark:bg-navy-900/90 backdrop-blur-xl border border-gray-200/60 dark:border-white/10 rounded-2xl shadow-2xl ring-1 ring-black/5 ${isScrollingUp && !isHidden ? "translate-x-0 opacity-100 scale-100" : "-translate-x-32 opacity-0 scale-95 pointer-events-none"} ${isMinimized ? "w-11" : "w-48"}`}
       >
-        <div className="flex items-center justify-center w-9 h-9 border-b border-gray-100 dark:border-white/5 mb-0.5">
-          <Cross size={16} className={`${seasonColor}`} strokeWidth={2.5} />
+        <div className={`flex items-center gap-3 w-full px-2 py-2 border-b border-gray-100 dark:border-white/5 mb-1 overflow-hidden transition-all ${isMinimized ? "justify-center" : "justify-start"}`}>
+          <Cross size={16} className={`${seasonColor} shrink-0`} strokeWidth={2.5} />
+          {!isMinimized && <span className="text-[10px] font-black uppercase tracking-widest text-gray-900 dark:text-white truncate">Verbum Domini</span>}
         </div>
 
-        <div className="flex flex-col gap-1 w-full">
+        <div className="flex flex-col gap-1 w-full overflow-hidden">
           <RailButton 
             active={isAutoplay} 
             onClick={handleGlobalListen}
             icon={isAutoplay ? <Square size={16} fill="currentColor" /> : <Volume2 size={16} />}
+            label="Listen All"
+            minimized={isMinimized}
             colorClass={isAutoplay ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : ""}
-            title="Listen All"
           />
           <RailButton 
             onClick={() => setIsSanctuaryOpen(true)}
             icon={<Flame size={16} fill="currentColor" />}
+            label="Daily Sanctuary"
+            minimized={isMinimized}
             colorClass={seasonColor}
-            title="Daily Sanctuary"
           />
-          <div className="h-px w-6 bg-gray-100 dark:border-white/5 my-0.5 mx-auto" />
+          <div className="h-px w-full bg-gray-100 dark:border-white/5 my-1" />
           <RailButton 
             onClick={() => setReadingMode(prev => prev === "SCROLL" ? "PAGE" : "SCROLL")}
             icon={readingMode === "SCROLL" ? <Columns size={16} /> : <ListFilter size={16} />}
-            title={readingMode === "SCROLL" ? "Page View" : "Scroll View"}
+            label={readingMode === "SCROLL" ? "Page View" : "Scroll View"}
+            minimized={isMinimized}
           />
           <RailButton 
             onClick={() => setIsJumpToOpen(true)}
             icon={<Search size={16} />}
+            label="Search & Jump"
+            minimized={isMinimized}
             primary
-            title="Search & Jump"
           />
+          
+          {!isMinimized && (
+            <div className="mt-2 animate-in fade-in slide-in-from-left-2 duration-300">
+              <p className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-2 px-2">Appearance</p>
+              <ThemeSelector />
+            </div>
+          )}
         </div>
 
-        {/* Minimized Hide Button */}
-        <button 
-          onClick={() => setIsHidden(true)}
-          className="mt-2 p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all active:scale-90"
-          title="Hide Menu"
-        >
-          <EyeOff size={14} />
-        </button>
+        <div className="mt-4 flex flex-col gap-1 w-full border-t border-gray-100 dark:border-white/5 pt-2 overflow-hidden">
+          {isMinimized && (
+            <button 
+              onClick={() => setIsMinimized(false)}
+              className="flex items-center justify-center w-9 h-9 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <Settings size={16} />
+            </button>
+          )}
+          <button 
+            onClick={() => setIsHidden(true)}
+            className={`flex items-center gap-3 px-2.5 py-2.5 rounded-xl text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all ${isMinimized ? "justify-center" : "justify-start"}`}
+            title="Hide Menu"
+          >
+            <EyeOff size={16} />
+            {!isMinimized && <span className="text-[10px] font-bold uppercase tracking-tight">Hide Interface</span>}
+          </button>
+        </div>
       </nav>
 
-      <main className="flex-1 relative w-full max-w-3xl mx-auto bg-white dark:bg-navy-950 overflow-hidden">
+      <main className="flex-1 relative w-full max-w-5xl mx-auto bg-white dark:bg-navy-950 overflow-hidden">
         <div className="absolute inset-0 overflow-auto scrollbar-hide py-12 px-4 md:px-0">
           {readingMode === "SCROLL" ? (
             <BibleView ref={bibleViewRef} onAudioRequest={handleAudioRequest} />
@@ -180,14 +207,14 @@ export function MainContainer({ season }: MainContainerProps) {
   );
 }
 
-function RailButton({ icon, onClick, active, colorClass, primary, title }: { icon: React.ReactNode; onClick: () => void; active?: boolean; colorClass?: string; primary?: boolean; title: string }) {
+function RailButton({ icon, label, onClick, active, colorClass, primary, minimized }: { icon: React.ReactNode; label: string; onClick: () => void; active?: boolean; colorClass?: string; primary?: boolean; minimized: boolean }) {
   return (
     <button 
       onClick={onClick}
-      title={title}
-      className={`group flex items-center justify-center w-9 h-9 rounded-lg transition-all active:scale-90 ${primary ? "bg-gray-900 dark:bg-white text-white dark:text-navy-950 shadow-md hover:shadow-lg" : colorClass || "text-gray-400 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"}`}
+      className={`group flex items-center gap-3 px-2.5 py-2.5 rounded-xl transition-all active:scale-90 w-full ${primary ? "bg-gray-900 dark:bg-white text-white dark:text-navy-950 shadow-md hover:shadow-lg" : colorClass || "text-gray-400 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5"} ${minimized ? "justify-center" : "justify-start"}`}
     >
-      {icon}
+      <div className="shrink-0">{icon}</div>
+      {!minimized && <span className="text-[10px] font-bold uppercase tracking-tight whitespace-nowrap">{label}</span>}
     </button>
   );
 }
