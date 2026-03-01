@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+
+  /* Sacred Palette */
+  --color-sacred-gold: #d4af37;     /* Divine Gold */
+  --color-sacred-alabaster: #fafaf9; /* Warm Alabaster White */
+  --color-sacred-marian: #1e3a8a;   /* Marian Blue */
+  
+  /* Liturgical Updates */
+  --color-liturgical-green: #059669;  /* Life of the Church */
+  --color-liturgical-violet: #6d28d9; /* Penance / Preparation */
+  --color-liturgical-gold: #fbbf24;   /* Resurrection / Glory */
+  --color-liturgical-red: #dc2626;    /* Sacrifice / Spirit */
+  --color-liturgical-rose: #f43f5e;   /* Joy */
+
+  --color-navy-900: #0f172a;
+  --color-navy-950: #020617;
+}
+
+@layer base {
+  body {
+    @apply bg-sacred-alabaster text-navy-950 antialiased selection:bg-sacred-gold selection:text-white;
+  }
+
+  /* Divine Light Mode as Default */
+  .dark body {
+    @apply bg-navy-950 text-sacred-alabaster;
+  }
+}
+
+@layer components {
+  .serif {
+    font-family: var(--font-serif);
+  }
+  
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border-b border-white/20;
+  }
+  
+  .dark .glass {
+    @apply bg-navy-950/70 border-white/5;
+  }
+
+  /* Textures inspired by light */
+  .luminous-shadow {
+    box-shadow: 0 0 40px -10px rgba(212, 175, 55, 0.2);
+  }
+}
