@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Search, ListFilter, Columns, Flame, Cross, Headphones, Square, EyeOff, Settings, Play, ChevronRight } from "lucide-react";
+import { Search, ListFilter, Columns, Flame, Cross, Headphones, Square, EyeOff, Settings, Play } from "lucide-react";
 import { BibleView, type BibleViewHandle } from "./BibleView";
 import { PageView } from "./PageView";
 import { JumpTo } from "./JumpTo";
@@ -66,29 +66,33 @@ export function MainContainer({ season }: MainContainerProps) {
     };
   }, []);
 
+  // Use a stable reference for audio.speak to avoid dependency loop
+  const speakRef = useRef(audio.speak);
+  useEffect(() => { speakRef.current = audio.speak; }, [audio.speak]);
+
   const playNextVerse = useCallback(() => {
     if (!autoplayRef.current) return;
     const nextIndex = indexRef.current + 1;
     if (nextIndex < MOCK_TOTAL_VERSES) {
       setCurrentVerseIndex(nextIndex);
       const verse = getVerseAt(nextIndex);
-      audio.speak(verse.text, verse.reference, { onEnd: playNextVerse });
+      speakRef.current(verse.text, verse.reference, { onEnd: playNextVerse });
       if (readingMode === "SCROLL") bibleViewRef.current?.scrollToIndex(nextIndex);
     } else {
       setIsAutoplay(false);
     }
-  }, [getVerseAt, audio, readingMode]);
+  }, [getVerseAt, readingMode]);
 
   const handleAudioRequest = useCallback((text: string, reference: string, index?: number, startAutoplay?: boolean) => {
     if (index !== undefined) setCurrentVerseIndex(index);
     if (startAutoplay) {
       setIsAutoplay(true);
-      audio.speak(text, reference, { onEnd: playNextVerse });
+      speakRef.current(text, reference, { onEnd: playNextVerse });
     } else {
       setIsAutoplay(false);
-      audio.speak(text, reference);
+      speakRef.current(text, reference);
     }
-  }, [audio, playNextVerse]);
+  }, [playNextVerse]);
 
   const handleGlobalListen = () => {
     if (isAutoplay) {
@@ -122,19 +126,16 @@ export function MainContainer({ season }: MainContainerProps) {
         </div>
 
         <div className="flex flex-col gap-1 w-full overflow-hidden">
-          {/* GROUP 1: THE COMPASS (Navigation) */}
           <RailButton onClick={() => setIsJumpToOpen(true)} icon={<Search size={16} />} label="Search & Jump" minimized={isMinimized} primary />
           <RailButton onClick={() => setReadingMode(prev => prev === "SCROLL" ? "PAGE" : "SCROLL")} icon={readingMode === "SCROLL" ? <Columns size={16} /> : <ListFilter size={16} />} label={readingMode === "SCROLL" ? "Page View" : "Scroll View"} minimized={isMinimized} colorClass="text-app-fg" />
           
           <div className="h-px w-full bg-app-border my-1" />
 
-          {/* GROUP 2: THE SANCTUARY (Spiritual Actions) */}
           <RailButton onClick={() => setIsSanctuaryOpen(true)} icon={<Flame size={16} fill="currentColor" />} label="Today's Mass" minimized={isMinimized} colorClass={seasonColor} />
           <RailButton active={isAutoplay} onClick={handleGlobalListen} icon={isAutoplay ? <Square size={16} fill="currentColor" /> : <Headphones size={16} />} label={isAutoplay ? "Stop Audio" : "Read Aloud"} minimized={isMinimized} colorClass={isAutoplay ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-app-fg"} />
           
           <div className="h-px w-full bg-app-border my-1" />
 
-          {/* GROUP 3: THE VESSEL (Interface) */}
           {!isMinimized && (
             <div className="mt-1 animate-in fade-in slide-in-from-left-2 duration-300">
               <p className="text-[8px] font-bold uppercase tracking-widest text-app-fg-muted mb-2 px-2">Appearance</p>
@@ -159,9 +160,9 @@ export function MainContainer({ season }: MainContainerProps) {
       <main className="flex-1 relative w-full bg-app-bg overflow-hidden">
         <div className="absolute inset-0 overflow-auto py-12">
           {readingMode === "SCROLL" ? (
-            <BibleView ref={bibleViewRef} onAudioRequest={handleAudioRequest} />
+            <BibleView ref={bibleViewRef} onAudioRequest={handleAudioRequest} activeVerseIndex={audio.isPlaying ? currentVerseIndex : null} />
           ) : (
-            <PageView initialVerseIndex={currentVerseIndex} onAudioRequest={handleAudioRequest} />
+            <PageView initialVerseIndex={currentVerseIndex} onAudioRequest={handleAudioRequest} activeVerseIndex={audio.isPlaying ? currentVerseIndex : null} />
           )}
         </div>
       </main>
@@ -185,7 +186,7 @@ export function MainContainer({ season }: MainContainerProps) {
           reference={audio.currentReference}
           onStop={() => { audio.stop(); setIsAutoplay(false); }}
           onRateChange={audio.setRate}
-          onClose={() => { audio.stop(); setIsAutoplay(false); }}
+          onClose={() => { audio.reset(); setIsAutoplay(false); }}
         />
       )}
     </div>

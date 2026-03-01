@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Volume2 } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Headphones, Play } from "lucide-react";
 
 interface Verse {
   id: string;
@@ -20,22 +20,26 @@ const BOOKS = [
 
 const mockVerses: Verse[] = Array.from({ length: 35000 }).map((_, i) => {
   const bookIndex = Math.floor(i / 500) % BOOKS.length;
+  const bookName = BOOKS[bookIndex]!;
+  const chapterNumber = Math.floor((i % 500) / 30) + 1;
+  const verseNumber = (i % 30) + 1;
   return {
     id: `verse-${i}`,
     globalOrder: i,
-    bookName: BOOKS[bookIndex]!,
-    chapterNumber: Math.floor((i % 500) / 30) + 1,
-    verseNumber: (i % 30) + 1,
+    bookName,
+    chapterNumber,
+    verseNumber,
     text: "The Word of God is living and active, sharper than any two-edged sword, piercing to the division of soul and of spirit.",
   };
 });
 
 interface PageViewProps {
   initialVerseIndex: number;
-  onAudioRequest: (text: string, reference: string) => void;
+  onAudioRequest: (text: string, reference: string, index?: number, startAutoplay?: boolean) => void;
+  activeVerseIndex?: number | null;
 }
 
-export function PageView({ initialVerseIndex, onAudioRequest }: PageViewProps) {
+export function PageView({ initialVerseIndex, onAudioRequest, activeVerseIndex }: PageViewProps) {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(initialVerseIndex);
 
   const currentVerse = mockVerses[currentVerseIndex]!;
@@ -46,12 +50,17 @@ export function PageView({ initialVerseIndex, onAudioRequest }: PageViewProps) {
     );
   }, [currentVerse.bookName, currentVerse.chapterNumber]);
 
+  // Sync internal index when jump happens from outside
+  useEffect(() => {
+    setCurrentVerseIndex(initialVerseIndex);
+  }, [initialVerseIndex]);
+
   const goToNextChapter = () => {
     const lastVerseOfChapter = chapterVerses[chapterVerses.length - 1]!;
     if (lastVerseOfChapter.globalOrder < mockVerses.length - 1) {
-      setCurrentVerseIndex(lastVerseOfChapter.globalOrder + 1);
-      const scrollParent = document.querySelector('.overflow-auto');
-      scrollParent?.scrollTo({ top: 0, behavior: 'smooth' });
+      const nextIdx = lastVerseOfChapter.globalOrder + 1;
+      setCurrentVerseIndex(nextIdx);
+      document.querySelector('.overflow-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -63,15 +72,15 @@ export function PageView({ initialVerseIndex, onAudioRequest }: PageViewProps) {
         v.bookName === prevVerse.bookName && 
         v.chapterNumber === prevVerse.chapterNumber
       );
-      setCurrentVerseIndex(firstVerseOfPrevChapter?.globalOrder ?? 0);
-      const scrollParent = document.querySelector('.overflow-auto');
-      scrollParent?.scrollTo({ top: 0, behavior: 'smooth' });
+      const nextIdx = firstVerseOfPrevChapter?.globalOrder ?? 0;
+      setCurrentVerseIndex(nextIdx);
+      document.querySelector('.overflow-auto')?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleListenChapter = () => {
-    const fullText = chapterVerses.map(v => v.text).join(" ");
-    onAudioRequest(fullText, `${currentVerse.bookName} ${currentVerse.chapterNumber}`);
+    const firstVerse = chapterVerses[0]!;
+    onAudioRequest(firstVerse.text, `${firstVerse.bookName} ${firstVerse.chapterNumber}:${firstVerse.verseNumber}`, firstVerse.globalOrder, true);
   };
 
   return (
@@ -89,55 +98,54 @@ export function PageView({ initialVerseIndex, onAudioRequest }: PageViewProps) {
         <div className="flex gap-2">
           <button 
             onClick={handleListenChapter}
-            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors"
-            title="Listen to Chapter"
+            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-blue-500 transition-colors"
+            title="Read Chapter Aloud"
           >
-            <Volume2 size={20} />
+            <Headphones size={20} />
           </button>
-          <button 
-            onClick={goToPrevChapter}
-            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors"
-            title="Previous Chapter"
-          >
+          <button onClick={goToPrevChapter} className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors">
             <ChevronLeft size={20} />
           </button>
-          <button 
-            onClick={goToNextChapter}
-            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors"
-            title="Next Chapter"
-          >
+          <button onClick={goToNextChapter} className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors">
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
       <div className="space-y-4">
-        {chapterVerses.map((verse) => (
-          <div key={verse.id} className="relative pl-8 group hover:bg-app-surface rounded-lg -ml-4 p-2 transition-colors cursor-pointer">
-            <span className="absolute left-2 top-3 text-[10px] font-bold text-app-fg-muted select-none font-sans">
-              {verse.verseNumber}
-            </span>
-            <p className="text-lg leading-relaxed serif opacity-90 group-hover:opacity-100">
-              {verse.text}
-            </p>
-          </div>
-        ))}
+        {chapterVerses.map((verse) => {
+          const isActive = activeVerseIndex === verse.globalOrder;
+          return (
+            <div 
+              key={verse.id} 
+              className={`relative pl-8 group hover:bg-app-surface rounded-lg -ml-4 p-2 transition-all duration-500 ${isActive ? "bg-sacred-gold/10 ring-1 ring-sacred-gold/20" : ""}`}
+            >
+              {/* Play Trigger on Verse Number */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAudioRequest(verse.text, `${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}`, verse.globalOrder, true);
+                }}
+                className={`absolute left-2 top-3 text-[10px] font-bold select-none font-sans transition-colors w-6 text-right ${isActive ? "text-sacred-gold" : "text-app-fg-muted hover:text-sacred-gold"}`}
+              >
+                <span className={isActive ? "opacity-0" : "group-hover:opacity-0 transition-opacity"}>{verse.verseNumber}</span>
+                <Play size={10} className={`absolute inset-0 m-auto transition-opacity ${isActive ? "opacity-100 text-sacred-gold animate-pulse" : "opacity-0 group-hover:opacity-100 text-sacred-gold"}`} fill="currentColor" />
+              </button>
+
+              <p className={`text-lg leading-relaxed serif transition-all ${isActive ? "text-app-fg font-medium scale-[1.01] origin-left" : "opacity-90 group-hover:opacity-100"}`}>
+                {verse.text}
+              </p>
+            </div>
+          );
+        })}
       </div>
       
       <div className="mt-16 flex justify-between pt-8 border-t border-app-border">
-        <button 
-          onClick={goToPrevChapter}
-          className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-app-fg-muted hover:bg-app-surface transition-colors"
-        >
-          <ChevronLeft size={16} />
-          Previous
+        <button onClick={goToPrevChapter} className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-app-fg-muted hover:bg-app-surface transition-colors">
+          <ChevronLeft size={16} /> Previous
         </button>
-        <button 
-          onClick={goToNextChapter}
-          className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-app-fg text-app-bg hover:opacity-90 transition-opacity"
-        >
-          Next Chapter
-          <ChevronRight size={16} />
+        <button onClick={goToNextChapter} className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-app-fg text-app-bg hover:opacity-90 transition-opacity">
+          Next Chapter <ChevronRight size={16} />
         </button>
       </div>
     </div>

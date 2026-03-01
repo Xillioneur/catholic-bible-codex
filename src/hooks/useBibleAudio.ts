@@ -9,13 +9,23 @@ export interface AudioOptions {
 
 export function useBibleAudio() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [rate, setRate] = useState(0.95);
+  const [rate, _setRate] = useState(1.0);
   const [currentReference, setCurrentReference] = useState("");
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [currentText, setCurrentText] = useState("");
+  const [charIndex, setCharIndex] = useState(0);
+  
+  // Refs to prevent stale closures in speech events
+  const rateRef = useRef(1.0);
   const onEndRef = useRef<(() => void) | null>(null);
+  const currentTextRef = useRef("");
+  const charIndexRef = useRef(0);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
-  // Stabilize voice selection
+  // Sync refs with state
+  useEffect(() => { rateRef.current = rate; }, [rate]);
+  useEffect(() => { currentTextRef.current = currentText; }, [currentText]);
+  useEffect(() => { charIndexRef.current = charIndex; }, [charIndex]);
+
   const selectVoice = useCallback(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     const voices = window.speechSynthesis.getVoices();
@@ -40,63 +50,83 @@ export function useBibleAudio() {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
       setIsPlaying(false);
-      setCurrentReference("");
     }
   }, []);
+
+  const reset = useCallback(() => {
+    stop();
+    setCurrentReference("");
+    setCurrentText("");
+    setCharIndex(0);
+    onEndRef.current = null;
+  }, [stop]);
 
   const speak = useCallback((text: string, reference: string, options?: AudioOptions) => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-    stop();
+    window.speechSynthesis.cancel();
+    
     setCurrentReference(reference);
+    setCurrentText(text);
     onEndRef.current = options?.onEnd ?? null;
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utteranceRef.current = utterance;
-    
     if (voiceRef.current) utterance.voice = voiceRef.current;
     
-    utterance.rate = options?.rate ?? rate;
+    // Use the explicit rate option or the persistent ref
+    const finalRate = options?.rate ?? rateRef.current;
+    utterance.rate = Math.max(0.25, Math.min(2.0, finalRate));
     utterance.pitch = 1.0;
 
     utterance.onstart = () => setIsPlaying(true);
+    utterance.onboundary = (event) => {
+      if (event.name === 'word') setCharIndex(event.charIndex);
+    };
+
     utterance.onend = () => {
       setIsPlaying(false);
-      // Small delay before calling next to ensure clean transition
-      setTimeout(() => {
-        if (onEndRef.current) {
-          onEndRef.current();
-        } else {
-          setCurrentReference("");
-        }
-      }, 50);
+      if (onEndRef.current) {
+        const callback = onEndRef.current;
+        // Delay to ensure state settles before next verse starts
+        setTimeout(() => callback(), 50);
+      }
     };
-    utterance.onerror = (e) => {
-      console.error("Speech Error:", e);
-      setIsPlaying(false);
-      setCurrentReference("");
-    };
+
+    utterance.onerror = () => setIsPlaying(false);
 
     window.speechSynthesis.speak(utterance);
-  }, [stop, rate]);
+  }, []); // speak is now stable
 
-  const changeRate = (newRate: number) => {
-    setRate(newRate);
-    if (isPlaying && utteranceRef.current) {
-      utteranceRef.current.rate = newRate;
+  const setRate = useCallback((newRate: number) => {
+    const clampedRate = Math.max(0.25, Math.min(2.0, newRate));
+    _setRate(clampedRate);
+    
+    if (isPlaying && currentTextRef.current) {
+      // Re-speak from current position to apply rate change mid-verse
+      const remainingText = currentTextRef.current.slice(charIndexRef.current);
+      speak(remainingText, currentReference, { 
+        rate: clampedRate, 
+        onEnd: onEndRef.current ?? undefined 
+      });
     }
-  };
+  }, [isPlaying, currentReference, speak]);
 
   useEffect(() => {
-    return () => stop();
-  }, [stop]);
+    return () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   return {
     isPlaying,
     rate,
     currentReference,
+    charIndex,
     speak,
     stop,
-    setRate: changeRate
+    reset,
+    setRate
   };
 }

@@ -39,9 +39,10 @@ export interface BibleViewHandle {
 
 interface BibleViewProps {
   onAudioRequest: (text: string, reference: string, index?: number, startAutoplay?: boolean) => void;
+  activeVerseIndex?: number | null;
 }
 
-export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioRequest }, ref) => {
+export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioRequest, activeVerseIndex }, ref) => {
   const parentRef = useRef<HTMLDivElement>(null);
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const { highlights } = useStudyTools();
@@ -80,6 +81,7 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
           const isNewChapter = verse.verseNumber === 1;
           const isNewBook = isNewChapter && verse.chapterNumber === 1;
           const highlight = highlights?.find(h => h.verseId === verse.id);
+          const isActive = activeVerseIndex === verse.globalOrder;
 
           return (
             <div
@@ -111,24 +113,23 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
               )}
               
               <div 
-                className="flex items-baseline gap-3 group cursor-pointer -mx-2 px-2 py-1 rounded-md transition-colors"
+                className={`flex items-baseline gap-3 group cursor-pointer -mx-2 px-2 py-1 rounded-md transition-all duration-500 ${isActive ? "bg-sacred-gold/10 ring-1 ring-sacred-gold/20" : ""}`}
                 style={{ backgroundColor: highlight ? `${highlight.color}20` : undefined }}
               >
-                {/* Play Trigger on Verse Number */}
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     onAudioRequest(verse.text, `${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}`, verse.globalOrder, true);
                   }}
-                  className="text-[10px] font-bold text-fg-secondary w-6 shrink-0 text-right select-none font-sans hover:text-sacred-gold transition-colors relative"
+                  className={`text-[10px] font-bold w-6 shrink-0 text-right select-none font-sans transition-colors relative ${isActive ? "text-sacred-gold" : "text-fg-secondary hover:text-sacred-gold"}`}
                 >
-                  <span className="group-hover:opacity-0 transition-opacity">{verse.verseNumber}</span>
-                  <Play size={10} className="absolute inset-0 m-auto opacity-0 group-hover:opacity-100 text-sacred-gold transition-opacity" fill="currentColor" />
+                  <span className={isActive ? "opacity-0" : "group-hover:opacity-0 transition-opacity"}>{verse.verseNumber}</span>
+                  <Play size={10} className={`absolute inset-0 m-auto transition-opacity ${isActive ? "opacity-100 text-sacred-gold animate-pulse" : "opacity-0 group-hover:opacity-100 text-sacred-gold"}`} fill="currentColor" />
                 </button>
 
                 <p 
                   onClick={() => setSelectedVerse(verse)}
-                  className={`text-base md:text-lg leading-relaxed serif flex-1 ${highlight ? "font-medium" : "text-app-fg opacity-90 hover:opacity-100"}`}
+                  className={`text-base md:text-lg leading-relaxed serif flex-1 transition-all ${isActive ? "text-app-fg font-medium scale-[1.01] origin-left" : highlight ? "font-medium" : "text-app-fg opacity-90 hover:opacity-100"}`}
                 >
                   {verse.text}
                 </p>
