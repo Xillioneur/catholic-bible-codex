@@ -81,23 +81,28 @@ const CATHOLIC_BOOKS = [
 ];
 
 async function main() {
-  console.log("Seeding Catholic Bible Canon...");
+  console.log("Seeding Catholic Bible Infrastructure...");
 
-  const webbe = await prisma.translation.upsert({
-    where: { code: "WEBBE" },
-    update: {},
-    create: {
-      code: "WEBBE",
-      name: "World English Bible (Catholic Edition)",
-      language: "English",
-      description: "A modern, public domain English translation of the Holy Bible.",
-    },
-  });
+  // 1. Seed Free Translations
+  const translations = [
+    { code: "WEBBE", name: "World English Bible (Catholic Edition)", language: "English", description: "A modern, public domain English translation." },
+    { code: "DR", name: "Douay-Rheims (Challoner)", language: "English", description: "The classic traditional English translation of the Vulgate." },
+    { code: "VUL", name: "Clementine Vulgate", language: "Latin", description: "The historic Latin text of the Church." },
+  ];
 
+  for (const t of translations) {
+    await prisma.translation.upsert({
+      where: { code: t.code },
+      update: {},
+      create: t,
+    });
+  }
+
+  // 2. Seed 73-Book Canon
   for (const bookData of CATHOLIC_BOOKS) {
     await prisma.book.upsert({
       where: { name: bookData.name },
-      update: {},
+      update: { order: bookData.order, testament: bookData.testament, isDeuterocanon: bookData.isDeuterocanon || false },
       create: {
         name: bookData.name,
         order: bookData.order,
@@ -107,13 +112,31 @@ async function main() {
     });
   }
 
-  console.log("Seeding complete.");
+  // 3. Setup Initial Daily Reading (Mock for current day)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  await prisma.dailyReading.upsert({
+    where: { date: today },
+    update: {},
+    create: {
+      date: today,
+      season: "ORDINARY_TIME",
+      readings: {
+        create: [
+          { type: "First Reading", reference: "Genesis 1:1-5", text: "In the beginning, when God created the heavens and the earth, the earth was a formless wasteland..." },
+          { type: "Psalm", reference: "Psalm 104", text: "Lord, send out your Spirit, and renew the face of the earth." },
+          { type: "Gospel", reference: "John 1:1-5", text: "In the beginning was the Word, and the Word was with God, and the Word was God..." },
+        ]
+      }
+    }
+  });
+
+  console.log("Seeding complete. The Digital Sanctuary is ready for text ingestion.");
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
+  .then(async () => { await prisma.$disconnect(); })
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();

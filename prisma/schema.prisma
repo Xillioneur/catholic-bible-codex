@@ -1,170 +1,72 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
-
-// Bible Data Models
 
 model Translation {
-    id          String   @id @default(cuid())
-    name        String   @unique
-    code        String   @unique // e.g., WEBBE, DR, VUL
-    language    String
-    description String?
-    verses      Verse[]
-}
-
-enum Testament {
-    OLD
-    NEW
+  id          String  @id @default(cuid())
+  name        String  @unique
+  code        String  @unique
+  language    String
+  description String?
+  verses      Verse[]
 }
 
 model Book {
-    id          String    @id @default(cuid())
-    name        String    @unique
-    shortName   String?   @unique
-    order       Int       @unique // 1-73
-    testament   Testament
-    isDeuterocanon Boolean @default(false)
-    chapters    Chapter[]
+  id             String    @id @default(cuid())
+  name           String    @unique
+  shortName      String?   @unique
+  order          Int       @unique
+  testament      Testament
+  isDeuterocanon Boolean   @default(false)
+  chapters       Chapter[]
 }
 
 model Chapter {
-    id       String @id @default(cuid())
-    number   Int
-    book     Book   @relation(fields: [bookId], references: [id])
-    bookId   String
-    verses   Verse[]
+  id     String  @id @default(cuid())
+  number Int
+  bookId String
+  book   Book    @relation(fields: [bookId], references: [id])
+  verses Verse[]
 
-    @@unique([bookId, number])
+  @@unique([bookId, number])
 }
 
 model Verse {
-    id            String      @id @default(cuid())
-    number        Int
-    text          String      @db.Text
-    chapter       Chapter     @relation(fields: [chapterId], references: [id])
-    chapterId     String
-    translation   Translation @relation(fields: [translationId], references: [id])
-    translationId String
-    
-    // Global order for infinite scroll optimization
-    globalOrder   Int         @unique
+  id            String      @id @default(cuid())
+  number        Int
+  text          String
+  chapterId     String
+  translationId String
+  globalOrder   Int         @unique
+  chapter       Chapter     @relation(fields: [chapterId], references: [id])
+  translation   Translation @relation(fields: [translationId], references: [id])
 
-    bookmarks     Bookmark[]
-    highlights    Highlight[]
-    notes         Note[]
-
-    @@unique([chapterId, number, translationId])
-    @@index([globalOrder])
+  @@unique([chapterId, number, translationId])
+  @@index([globalOrder])
 }
 
 model DailyReading {
-    id        String   @id @default(cuid())
-    date      DateTime @unique
-    season    String   // Liturgical season: LENT, EASTER, etc.
-    readings  Reading[]
+  id       String    @id @default(cuid())
+  date     DateTime  @unique
+  season   String
+  readings Reading[]
 }
 
 model Reading {
-    id             String       @id @default(cuid())
-    type           String       // First, Psalm, Second, Gospel
-    reference      String       // e.g., "John 6:51"
-    text           String       @db.Text
-    dailyReading   DailyReading @relation(fields: [dailyReadingId], references: [id])
-    dailyReadingId String
+  id             String       @id @default(cuid())
+  type           String
+  reference      String
+  text           String
+  dailyReadingId String
+  dailyReading   DailyReading @relation(fields: [dailyReadingId], references: [id])
 }
 
-// User Data & Study Tools
-
-model Bookmark {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId    String
-    verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
-    verseId   String
-
-    @@unique([userId, verseId])
-}
-
-model Highlight {
-    id        String   @id @default(cuid())
-    color     String   // Hex or liturgical color name
-    createdAt DateTime @default(now())
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId    String
-    verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
-    verseId   String
-
-    @@unique([userId, verseId])
-}
-
-model Note {
-    id        String   @id @default(cuid())
-    content   String   @db.Text // Markdown supported
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId    String
-    verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
-    verseId   String
-
-    @@unique([userId, verseId])
-}
-
-// Necessary for Next auth
-model Account {
-    id                       String  @id @default(cuid())
-    userId                   String
-    type                     String
-    provider                 String
-    providerAccountId        String
-    refresh_token            String? @db.Text
-    access_token             String? @db.Text
-    expires_at               Int?
-    token_type               String?
-    scope                    String?
-    id_token                 String? @db.Text
-    session_state            String?
-    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
-
-    @@unique([provider, providerAccountId])
-}
-
-model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
-    emailVerified DateTime?
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    bookmarks     Bookmark[]
-    highlights    Highlight[]
-    notes         Note[]
-}
-
-model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
-
-    @@unique([identifier, token])
+enum Testament {
+  OLD
+  NEW
 }

@@ -8,32 +8,41 @@ export const bibleRouter = createTRPCRouter({
     });
   }),
 
-  getVerses: publicProcedure
+  // Optimized for virtualized infinite scroll
+  getInfiniteVerses: publicProcedure
     .input(z.object({
-      skip: z.number().default(0),
-      take: z.number().default(50),
+      limit: z.number().min(1).max(100).nullish(),
+      cursor: z.number().nullish(), // globalOrder
       translationCode: z.string().default("WEBBE"),
     }))
     .query(async ({ ctx, input }) => {
-      return ctx.db.verse.findMany({
+      const limit = input.limit ?? 50;
+      const { cursor } = input;
+
+      const items = await ctx.db.verse.findMany({
+        take: limit + 1, // Fetch one extra item to use as the next cursor
         where: {
-          translation: {
-            code: input.translationCode,
-          },
+          translation: { code: input.translationCode },
+          globalOrder: cursor ? { gte: cursor } : undefined,
         },
-        orderBy: {
-          globalOrder: "asc",
-        },
-        skip: input.skip,
-        take: input.take,
+        orderBy: { globalOrder: "asc" },
         include: {
           chapter: {
-            include: {
-              book: true,
-            },
+            include: { book: true },
           },
         },
       });
+
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (items.length > limit) {
+        const nextItem = items.pop();
+        nextCursor = nextItem!.globalOrder;
+      }
+
+      return {
+        items,
+        nextCursor,
+      };
     }),
 
   search: publicProcedure
@@ -47,7 +56,7 @@ export const bibleRouter = createTRPCRouter({
           translation: { code: input.translationCode },
           text: { contains: input.query, mode: 'insensitive' }
         },
-        take: 20,
+        take: 50,
         include: {
           chapter: { include: { book: true } }
         }
@@ -58,8 +67,10 @@ export const bibleRouter = createTRPCRouter({
     .input(z.object({ date: z.date().optional() }))
     .query(async ({ ctx, input }) => {
       const date = input.date ?? new Date();
+      // Normalize to start of day
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
       return ctx.db.dailyReading.findUnique({
-        where: { date },
+        where: { date: startOfDay },
         include: { readings: true },
       });
     }),
