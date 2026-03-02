@@ -37,9 +37,11 @@ interface PageViewProps {
   initialVerseIndex: number;
   onAudioRequest: (text: string, reference: string, index?: number, startAutoplay?: boolean) => void;
   activeVerseIndex?: number | null;
+  translationCode?: string;
+  fontSize?: number;
 }
 
-export function PageView({ initialVerseIndex, onAudioRequest, activeVerseIndex }: PageViewProps) {
+export function PageView({ initialVerseIndex, onAudioRequest, activeVerseIndex, fontSize = 18 }: PageViewProps) {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(initialVerseIndex);
 
   const currentVerse = mockVerses[currentVerseIndex]!;
@@ -50,7 +52,6 @@ export function PageView({ initialVerseIndex, onAudioRequest, activeVerseIndex }
     );
   }, [currentVerse.bookName, currentVerse.chapterNumber]);
 
-  // Sync internal index when jump happens from outside
   useEffect(() => {
     setCurrentVerseIndex(initialVerseIndex);
   }, [initialVerseIndex]);
@@ -84,7 +85,7 @@ export function PageView({ initialVerseIndex, onAudioRequest, activeVerseIndex }
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-app-bg text-app-fg px-4 md:px-12 transition-colors duration-500">
+    <div className="w-full max-w-5xl mx-auto bg-app-bg text-app-fg px-4 md:px-12 transition-colors duration-500" style={{ fontSize: `${fontSize}px` }}>
       <div className="mb-8 border-b border-app-border pb-4 flex justify-between items-baseline">
         <div>
           <h1 className="text-2xl font-bold serif">
@@ -96,11 +97,7 @@ export function PageView({ initialVerseIndex, onAudioRequest, activeVerseIndex }
         </div>
         
         <div className="flex gap-2">
-          <button 
-            onClick={handleListenChapter}
-            className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-blue-500 transition-colors"
-            title="Read Chapter Aloud"
-          >
+          <button onClick={handleListenChapter} className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-blue-500 transition-colors" title="Read Chapter Aloud">
             <Headphones size={20} />
           </button>
           <button onClick={goToPrevChapter} className="p-2 rounded-md hover:bg-app-surface text-app-fg-muted hover:text-app-fg transition-colors">
@@ -116,23 +113,15 @@ export function PageView({ initialVerseIndex, onAudioRequest, activeVerseIndex }
         {chapterVerses.map((verse) => {
           const isActive = activeVerseIndex === verse.globalOrder;
           return (
-            <div 
-              key={verse.id} 
-              className={`relative pl-8 group hover:bg-app-surface rounded-lg -ml-4 p-2 transition-all duration-500 ${isActive ? "bg-sacred-gold/10 ring-1 ring-sacred-gold/20" : ""}`}
-            >
-              {/* Play Trigger on Verse Number */}
+            <div key={verse.id} className={`relative pl-8 group hover:bg-app-surface rounded-lg -ml-4 p-2 transition-all duration-500 ${isActive ? "bg-sacred-gold/10 ring-1 ring-sacred-gold/20" : ""}`}>
               <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAudioRequest(verse.text, `${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}`, verse.globalOrder, true);
-                }}
+                onClick={(e) => { e.stopPropagation(); onAudioRequest(verse.text, `${verse.bookName} ${verse.chapterNumber}:${verse.verseNumber}`, verse.globalOrder, true); }}
                 className={`absolute left-2 top-3 text-[10px] font-bold select-none font-sans transition-colors w-6 text-right ${isActive ? "text-sacred-gold" : "text-app-fg-muted hover:text-sacred-gold"}`}
               >
                 <span className={isActive ? "opacity-0" : "group-hover:opacity-0 transition-opacity"}>{verse.verseNumber}</span>
                 <Play size={10} className={`absolute inset-0 m-auto transition-opacity ${isActive ? "opacity-100 text-sacred-gold animate-pulse" : "opacity-0 group-hover:opacity-100 text-sacred-gold"}`} fill="currentColor" />
               </button>
-
-              <p className={`text-lg leading-relaxed serif transition-all ${isActive ? "text-app-fg font-medium scale-[1.01] origin-left" : "opacity-90 group-hover:opacity-100"}`}>
+              <p className="leading-relaxed serif transition-all opacity-90 group-hover:opacity-100" style={{ fontWeight: isActive ? 600 : 400 }}>
                 {verse.text}
               </p>
             </div>

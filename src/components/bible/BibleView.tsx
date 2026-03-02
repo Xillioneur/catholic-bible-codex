@@ -15,9 +15,10 @@ interface BibleViewProps {
   onAudioRequest: (text: string, reference: string, index?: number, startAutoplay?: boolean) => void;
   activeVerseIndex?: number | null;
   translationCode?: string;
+  fontSize?: number;
 }
 
-export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioRequest, activeVerseIndex, translationCode = "WEBBE" }, ref) => {
+export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioRequest, activeVerseIndex, translationCode = "WEBBE", fontSize = 18 }, ref) => {
   const parentRef = useRef<HTMLDivElement>(null);
   const [selectedVerse, setSelectedVerse] = useState<any | null>(null);
   const { highlights } = useStudyTools();
@@ -31,7 +32,7 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
     { limit: 50, translationCode },
     { 
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-      staleTime: Infinity, // Keep data in memory to prevent refetching during scroll
+      staleTime: Infinity,
     }
   );
 
@@ -42,15 +43,13 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? allVerses.length + 1 : allVerses.length,
     getScrollElement,
-    estimateSize: () => 60,
-    overscan: 40, // Increased for smoother scrolling
+    estimateSize: () => fontSize * 3, // Adapt estimate to font size
+    overscan: 40,
   });
 
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
     if (!lastItem) return;
-
-    // Aggressively fetch next page when user is halfway through the current set
     if (lastItem.index >= allVerses.length - 10 && hasNextPage && !isFetchingNextPage) {
       void fetchNextPage();
     }
@@ -62,8 +61,16 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
     },
   }));
 
+  if (!data && allVerses.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-20 animate-pulse">
+        <div className="text-sacred-gold text-[10px] font-black uppercase tracking-[0.3em]">Preparing the Word...</div>
+      </div>
+    );
+  }
+
   return (
-    <div ref={parentRef} className="w-full max-w-5xl mx-auto px-4 md:px-12 bg-app-bg text-app-fg">
+    <div ref={parentRef} className="w-full max-w-5xl mx-auto px-4 md:px-12 bg-app-bg text-app-fg" style={{ fontSize: `${fontSize}px` }}>
       <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
         {rowVirtualizer.getVirtualItems().map((virtualItem) => {
           const isLoader = virtualItem.index >= allVerses.length;
@@ -96,11 +103,11 @@ export const BibleView = forwardRef<BibleViewHandle, BibleViewProps>(({ onAudioR
               )}
               
               <div className={`flex items-baseline gap-3 group cursor-pointer -mx-2 px-2 py-1 rounded-md transition-all duration-500 ${isActive ? "bg-sacred-gold/10 ring-1 ring-sacred-gold/20" : ""}`} style={{ backgroundColor: highlight ? `${highlight.color}20` : undefined }}>
-                <button onClick={(e) => { e.stopPropagation(); onAudioRequest(verse.text, `${verse.chapter.book.name} ${verse.chapter.number}:${verse.number}`, verse.globalOrder, true); }} className={`text-[10px] font-bold w-6 shrink-0 text-right select-none font-sans transition-colors relative ${isActive ? "text-sacred-gold" : "text-fg-secondary hover:text-sacred-gold"}`}>
-                  <span className={isActive ? "opacity-0" : "group-hover:opacity-0 transition-opacity"}>{verse.number}</span>
+                <button onClick={(e) => { e.stopPropagation(); onAudioRequest(verse.text, `${verse.chapter.book.name} ${verse.chapter.number}:${verse.number}`, verse.globalOrder, true); }} className="text-[10px] font-bold w-6 shrink-0 text-right select-none font-sans transition-colors relative mt-1.5">
+                  <span className={isActive ? "opacity-0" : "group-hover:opacity-0 transition-opacity text-fg-secondary"}>{verse.number}</span>
                   <Play size={10} className={`absolute inset-0 m-auto transition-opacity ${isActive ? "opacity-100 text-sacred-gold animate-pulse" : "opacity-0 group-hover:opacity-100 text-sacred-gold"}`} fill="currentColor" />
                 </button>
-                <p onClick={() => setSelectedVerse(verse)} className={`text-base md:text-lg leading-relaxed serif flex-1 transition-all ${isActive ? "text-app-fg font-medium scale-[1.01] origin-left" : highlight ? "font-medium" : "text-app-fg opacity-90 hover:opacity-100"}`}>
+                <p onClick={() => setSelectedVerse(verse)} className="leading-relaxed serif flex-1 transition-all opacity-90 hover:opacity-100" style={{ fontWeight: isActive || highlight ? 600 : 400 }}>
                   {verse.text}
                 </p>
               </div>
